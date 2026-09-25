@@ -336,7 +336,12 @@ def generate_x_caption(transcript_text: str, streamer: str, allowed_names: list[
             raw = _call_llm(prompt, model=_title_model())
         except Exception as e:
             print(f"[generate_posts] X caption call failed ({e})")
-            return "[generation failed, write manually]"
+            # Keep every exported clip publishable when xAI is unavailable.
+            # Use the verified transcript as a factual one-line caption rather
+            # than exposing an internal error marker to the dashboard.
+            seed = re.sub(r"\s+", " ", _redact(transcript_text or "")).strip()
+            seed = re.split(r"(?<=[.!?])\s+", seed, maxsplit=1)[0]
+            return f"{streamer or 'The streamer'} discusses {seed[:220]} — what do you make of it?"
 
         cleaned = raw.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
         try:
