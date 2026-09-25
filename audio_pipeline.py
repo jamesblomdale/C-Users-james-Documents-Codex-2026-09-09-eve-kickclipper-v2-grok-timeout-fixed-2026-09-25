@@ -215,7 +215,12 @@ def transcribe_vod(engine, source, on_progress=None, *, remote_url=None, duratio
             atomic_json(result_path,state)
             return words
         except BaseException as exc:
-            state.update(status='FAILED',error=type(exc).__name__)
+            # Persist the actionable provider/ffmpeg message in the checkpoint;
+            # storing only ``RuntimeError`` made deferred-chunk failures
+            # impossible to diagnose after the worker had moved on.
+            detail = str(exc).strip()
+            state.update(status='FAILED', error=type(exc).__name__,
+                         error_detail=detail[-1000:] if detail else type(exc).__name__)
             atomic_json(result_path,state)
             raise
         finally:
