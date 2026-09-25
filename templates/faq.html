@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FAQ — kick-clipper</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/site.css">
+<style>
+  .faq-list { max-width: 760px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; }
+  .faq-item { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+  .faq-q {
+    width: 100%; text-align: left; background: none; border: none; color: var(--ink);
+    font-family: inherit; font-size: 15px; font-weight: 600; padding: 18px 20px;
+    display: flex; justify-content: space-between; align-items: center; cursor: pointer; gap: 16px;
+  }
+  .faq-q .chev { transition: transform 0.2s ease; color: var(--cyan); flex-shrink: 0; }
+  .faq-item.open .faq-q .chev { transform: rotate(180deg); }
+  .faq-a { max-height: 0; overflow: hidden; transition: max-height 0.25s ease; }
+  .faq-item.open .faq-a { max-height: 400px; }
+  .faq-a p { padding: 0 20px 18px; margin: 0; color: var(--ink-muted); font-size: 14px; line-height: 1.65; }
+</style>
+<link rel="stylesheet" href="/static/professional-light.css">
+</head>
+<body>
+{% include "_nav.html" %}
+
+<main>
+  <section class="page-hero">
+    <span class="kicker">FAQ</span>
+    <h1>Questions clippers actually ask</h1>
+    <p>Built for clippers and clipping teams who turn Kick streams into short verticals — here's the straight version of everything.</p>
+  </section>
+
+  <section class="section-pad" style="padding-top:0;">
+    <div class="faq-list" id="faqList">
+
+      <div class="faq-item reveal in">
+        <button class="faq-q">Who is this for?
+          <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="faq-a"><p>Clippers and small clipping teams who post short vertical clips from Kick streams. You paste a channel or VOD; it transcribes, scores, cuts, captions, and prepares titles.</p></div>
+      </div>
+
+      <div class="faq-item reveal in">
+        <button class="faq-q">Do I need to be the streamer myself?
+          <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="faq-a"><p>No. Point it at any public Kick channel or VOD URL. You're responsible for following Kick's TOS, the streamer's own clipping/reuse rules, and any campaign rules you're working under — this tool doesn't grant you rights to content, it just processes what you point it at.</p></div>
+      </div>
+
+      <div class="faq-item reveal in">
+        <button class="faq-q">What happens if a job finds zero clips?
+          <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="faq-a"><p>If a full scan completes and nothing clears your clip threshold, the credits held for that job are returned to your balance automatically. You're never charged for a stream that had nothing worth cutting. Same if the job fails because of something on our end (a Kick resolve failure, an LLM outage, an encoder crash) — that's refunded too.</p></div>
+      </div>
+
+      <div class="faq-item reveal in">
+        <button class="faq-q">How do credits work between live and VOD?
+          <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="faq-a"><p>One shared credit pool. 1 credit ≈ 1 minute of source footage actually processed. Live costs more per minute than VOD, since a live job holds a worker open for the whole session rather than a fixed known length. See Pricing for exact rates.</p></div>
+      </div>
+
+      <div class="faq-item reveal in">
+        <button class="faq-q">Do you store or see my API keys?
+          <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="faq-a"><p>Local Whisper transcription needs no API key. The app owner configures provider keys on the server. Optional Gemini video review uses a separate Gemini key. Customers cannot access these keys through the dashboard.</p></div>
+      </div>
+
+      <div class="faq-item reveal in">
+        <button class="faq-q">Will my account get banned if I auto-post clips later?
+          <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="faq-a"><p>This version prepares downloadable clips and suggested titles. It does not automatically publish to social accounts.</p></div>
+      </div>
+
+      <div class="faq-item reveal in">
+        <button class="faq-q">Is there a free way to try it?
+          <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="faq-a"><p>Yes — the Free plan gives every new account a one-time batch of credits (no card required), watermarked and capped to one job at a time, so you can see real output before paying anything.</p></div>
+      </div>
+
+      <div class="faq-item reveal in">
+        <button class="faq-q">What can I control, versus what's automatic?
+          <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="faq-a"><p>Clip threshold, aspect ratio, face tracking, burn-in captions and caption styling, safety flags, priority names, max clips, and transcription/chunk speed presets are all yours to tune per job. Moment scoring and title generation are automatic — you see the score breakdown and the "why this clip" reasoning for every result.</p></div>
+      </div>
+
+    </div>
+  </section>
+</main>
+
+{% include "_footer.html" %}
+<script src="/static/site.js"></script>
+<script>
+document.getElementById('faqList').addEventListener('click', function (e) {
+  var btn = e.target.closest('.faq-q');
+  if (!btn) return;
+  btn.parentElement.classList.toggle('open');
+});
+</script>
+</body>
+</html>

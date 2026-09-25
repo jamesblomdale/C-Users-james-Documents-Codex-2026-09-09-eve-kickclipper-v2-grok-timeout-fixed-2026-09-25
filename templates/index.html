@@ -1,0 +1,1348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>kick-clipper</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/portfolio.css">
+<style>
+  :root {
+    --bg: #f7f8fa;
+    --sidebar: #100a1f;
+    --panel: #190f2e;
+    --panel2: #130b24;
+    --border: #dfe3e8;
+    --text: #f4eefc;
+    --muted: #ac9dce;
+    --accent: #7c3aed;
+    --accent2: #22d3ee;
+    --pink: #7c3aed;
+    --lime: #0f766e;
+    --amber: #fbbf24;
+    --danger: #ff5470;
+    --spectrum: linear-gradient(90deg, var(--lime), var(--accent2), var(--accent), var(--pink));
+  }
+  * { box-sizing: border-box; }
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
+  body {
+    background:
+      radial-gradient(circle at 15% -10%, rgba(124,58,237,0.35) 0%, transparent 45%),
+      radial-gradient(circle at 100% 0%, rgba(34,211,238,0.14) 0%, transparent 40%),
+      var(--bg);
+    color: var(--text);
+    font-family: "Inter", -apple-system, "Segoe UI", Roboto, sans-serif;
+    margin: 0;
+    display: flex;
+    min-height: 100vh;
+  }
+  h1, h2, h3, .brand, .page-title, .job-name, .clip-title, .preset-name {
+    font-family: "Space Grotesk", "Inter", sans-serif;
+  }
+  a { color: var(--accent2); }
+  *:focus-visible {
+    outline: 2px solid var(--accent2);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* Sidebar */
+  .sidebar {
+    width: 210px;
+    background: var(--sidebar);
+    border-right: 1px solid var(--border);
+    padding: 24px 16px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+  .brand {
+    font-weight: 700;
+    font-size: 19px;
+    background: linear-gradient(90deg, var(--lime), var(--accent2) 45%, var(--pink));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    margin-bottom: 28px;
+    letter-spacing: -0.01em;
+  }
+  .nav-item {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: none;
+    border: none;
+    border-left: 2px solid transparent;
+    color: var(--muted);
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-bottom: 4px;
+    transition: background 0.15s, color 0.15s;
+  }
+  .nav-item:hover { color: var(--text); background: rgba(124,58,237,0.12); }
+  .nav-item.active { color: var(--text); background: linear-gradient(90deg, rgba(124,58,237,0.28), rgba(34,211,238,0.08)); border-left: 2px solid var(--accent2); }
+  #nav-live.active { border-left-color: var(--lime); }
+  #nav-vod.active { border-left-color: var(--accent2); }
+  #nav-library.active { border-left-color: var(--pink); }
+
+  .main { flex: 1; padding: 32px 40px; max-width: 1100px; }
+  .page-title { font-size: 23px; font-weight: 700; margin: 0 0 4px; }
+  .page-subtitle { color: var(--muted); font-size: 14px; margin-bottom: 26px; }
+
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  .panel {
+    position: relative;
+    background: linear-gradient(180deg, var(--panel), var(--panel2));
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px 22px 22px;
+    margin-bottom: 22px;
+    overflow: hidden;
+  }
+  .panel::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--spectrum);
+  }
+  .panel h2 {
+    font-size: 13px; letter-spacing: 0.01em;
+    color: var(--accent2); margin: 0 0 16px; font-weight: 700;
+  }
+
+  .row { display: flex; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
+  .field { flex: 1; min-width: 160px; }
+  .field.checkbox-field { display: flex; align-items: center; gap: 8px; padding-top: 22px; min-width: 140px; flex: 0; }
+  label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; white-space: nowrap; }
+  input[type=text], input[type=password], input[type=number], select {
+    width: 100%; background: #0b0714; border: 1px solid var(--border); color: var(--text);
+    padding: 9px 10px; border-radius: 7px; font-size: 14px;
+  }
+  input:focus, select:focus { outline: 2px solid var(--accent2); outline-offset: 1px; }
+  input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--accent); }
+
+  .advanced-toggle { color: var(--accent2); font-size: 12px; cursor: pointer; margin-top: 6px; display: inline-block; }
+  .advanced-row { display: none; }
+  .advanced-row.open { display: flex; }
+
+  button { border: none; border-radius: 8px; padding: 10px 22px; font-size: 14px; font-weight: 700; cursor: pointer; transition: filter 0.15s, transform 0.15s; }
+  .btn-primary { background: linear-gradient(90deg, var(--accent2), var(--accent)); color: #fff; }
+  .btn-primary:hover { filter: brightness(1.12); }
+  .btn-primary:active { transform: translateY(1px); }
+  .btn-danger { background: var(--danger); color: white; }
+  .btn-secondary { background: #1a1130; color: var(--text); border: 1px solid var(--border); }
+  .btn-secondary:hover { border-color: var(--accent2); }
+  .btn-danger:disabled, .btn-primary:disabled { background: #241a3d; color: #6c6389; cursor: not-allowed; filter: none; }
+
+  .error-msg { color: var(--danger); font-size: 13px; margin-top: 10px; display: none; }
+
+  .job-card { background: var(--panel2); border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; margin-bottom: 16px; }
+  .job-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  .job-name { font-weight: 700; font-size: 15px; }
+  .status-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: #4b4468; margin-right: 8px; }
+  .status-dot.live { background: var(--lime); box-shadow: 0 0 8px var(--lime); }
+  .status-text { font-size: 12px; color: var(--muted); }
+  .job-log {
+    background: #06040c; border: 1px solid var(--border); border-radius: 8px; padding: 10px;
+    font-family: "SF Mono", Consolas, monospace; font-size: 11px; color: var(--accent2);
+    height: 100px; overflow-y: auto; white-space: pre-wrap; word-break: break-word; margin-top: 8px;
+  }
+
+  /* Clip library grid -- styled after the reference layout */
+  .clip-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 18px; margin-top: 16px; }
+  .clip-card {
+    position: relative;
+    background: var(--panel2); border: 1px solid var(--border); border-radius: 12px;
+    overflow: hidden; display: flex; flex-direction: column;
+    transition: border-color 0.15s, transform 0.15s;
+  }
+  .clip-card:hover { border-color: var(--accent2); transform: translateY(-2px); }
+  .clip-card::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--spectrum);
+    z-index: 1;
+  }
+  .clip-card video { width: 100%; display: block; background: #000; max-height: 340px; }
+  .clip-body { padding: 12px 14px 14px; }
+  .clip-title { font-weight: 700; font-size: 13px; margin-bottom: 6px; line-height: 1.3; }
+  .clip-desc {
+    font-size: 12px; color: var(--muted); white-space: pre-wrap;
+    max-height: 90px; overflow-y: auto; margin-bottom: 10px;
+  }
+  .score-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .score-badge {
+    font-size: 12px; font-weight: 800; padding: 3px 9px; border-radius: 6px;
+    background: linear-gradient(90deg, var(--accent2), var(--accent)); color: #fff;
+  }
+  .score-tier { font-size: 11px; color: var(--muted); }
+  .score-breakdown { font-size: 11px; color: var(--muted); margin-bottom: 10px; display: none; }
+  .score-breakdown.open { display: block; }
+  .score-toggle { font-size: 11px; color: var(--accent2); cursor: pointer; }
+  .clip-actions { display: flex; gap: 8px; }
+  .clip-actions a, .clip-actions button { font-size: 12px; padding: 7px 12px; text-decoration: none; }
+
+  .empty-state { color: var(--muted); font-size: 13px; padding: 14px 0; }
+
+  .clip-note {
+    width: 100%; background: #0b0714; border: 1px solid var(--border); color: var(--text);
+    border-radius: 6px; padding: 7px 9px; font-size: 12px; font-family: inherit;
+    resize: vertical; min-height: 40px; margin-bottom: 10px;
+  }
+  .clip-note::placeholder { color: #6c6389; }
+  .clip-note:focus { outline: 2px solid var(--accent2); outline-offset: 1px; }
+
+  .edit-toggle { font-size: 12px; color: var(--accent2); cursor: pointer; margin-bottom: 8px; display: inline-block; }
+  .edit-panel { display: none; background: #0b0714; border: 1px solid var(--border); border-radius: 8px; padding: 10px; margin-bottom: 10px; }
+  .edit-panel.open { display: block; }
+  .edit-row { display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; align-items: flex-end; }
+  .edit-field { flex: 1; min-width: 90px; }
+  .edit-field label { display: block; font-size: 10px; color: var(--muted); margin-bottom: 3px; }
+  .edit-field input, .edit-field select {
+    width: 100%; background: #190f2e; border: 1px solid var(--border); color: var(--text);
+    padding: 6px 7px; border-radius: 5px; font-size: 12px;
+  }
+  .edit-status { font-size: 11px; color: var(--muted); }
+
+  .status-now { font-size: 12px; color: var(--text); margin-top: 6px; }
+  .status-next { font-size: 11px; color: var(--muted); }
+
+  .preset-row { display: flex; gap: 10px; margin-bottom: 18px; flex-wrap: wrap; }
+  .preset-btn {
+    background: #190f2e; border: 1px solid var(--border); color: var(--text);
+    padding: 10px 16px; border-radius: 10px; cursor: pointer; font-size: 13px;
+    display: flex; flex-direction: column; align-items: flex-start; gap: 2px; min-width: 140px;
+    transition: border-color 0.15s, transform 0.15s;
+  }
+  .preset-btn:hover { border-color: var(--accent2); transform: translateY(-1px); }
+  .preset-btn .preset-icon { font-size: 18px; }
+  .preset-btn .preset-name { font-weight: 700; }
+  .preset-btn .preset-desc { font-size: 11px; color: var(--muted); }
+
+  .stars { position: relative; display: inline-block; font-size: 14px; line-height: 1; }
+  .stars-empty { color: #392c5c; letter-spacing: 2px; }
+  .stars-filled {
+    position: absolute; top: 0; left: 0; overflow: hidden; white-space: nowrap;
+    color: var(--amber); letter-spacing: 2px;
+  }
+  .score-reason { font-size: 11px; color: var(--muted); margin: 4px 0 10px; font-style: italic; }
+
+  .progress-wrap { margin-top: 8px; }
+  .progress-label { font-size: 11px; color: var(--muted); margin-bottom: 4px; display: flex; justify-content: space-between; }
+  .progress-bar-bg { background: #241a3d; border-radius: 6px; height: 7px; overflow: hidden; }
+  .progress-bar-fill { background: linear-gradient(90deg, var(--lime), var(--accent2), var(--accent)); height: 100%; transition: width 0.4s; }
+
+  /* ---- Motion refinements ---- */
+
+  /* Keep the visual depth without an animated/full-screen SVG turbulence
+     filter. Chromium can rasterise that filter continuously, which made the
+     dashboard unresponsive on lower-powered machines. */
+  .grain-overlay {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 999;
+    opacity: 0.16;
+    background:
+      radial-gradient(circle at 18% 12%, rgba(168,85,247,.18), transparent 34%),
+      radial-gradient(circle at 82% 30%, rgba(34,211,238,.10), transparent 30%);
+  }
+
+  /* Tabs fade + rise in on every switch instead of snapping straight to
+     display:block -- showTab() always removes .active then re-adds it,
+     so the animation restarts cleanly each time. */
+  @keyframes tabIn {
+    from { opacity: 0; transform: translateY(14px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .tab-content.active { animation: tabIn 0.45s cubic-bezier(.16,1,.3,1) both; }
+
+  /* Cards fade + rise in as they're rendered (job cards, clip cards).
+     @starting-style animates the transition from that starting state on
+     first paint after insertion -- no JS required, degrades silently to
+     a static appearance on older browsers. */
+  .job-card, .clip-card {
+    transition: opacity 0.5s ease, transform 0.5s cubic-bezier(.16,1,.3,1), border-color 0.15s;
+  }
+  @starting-style {
+    .job-card, .clip-card { opacity: 0; transform: translateY(14px); }
+  }
+
+  /* The top spectrum stripe on panels/cards gets a slow shimmer instead
+     of sitting static -- a quiet nod to "always-on" AI processing. */
+  .panel::before, .clip-card::before {
+    background-size: 200% 100%;
+    animation: shimmer 6s linear infinite;
+  }
+  @keyframes shimmer {
+    to { background-position: -200% 0; }
+  }
+
+  /* A running job's status dot breathes gently instead of sitting as a
+     flat glow, so "in progress" reads at a glance from across the room. */
+  .status-dot.live { animation: pulseDot 1.8s ease-in-out infinite; }
+  @keyframes pulseDot {
+    0%, 100% { box-shadow: 0 0 8px var(--lime); }
+    50% { box-shadow: 0 0 16px 3px var(--lime); }
+  }
+
+  /* (prefers-reduced-motion is already handled globally near the top of
+     this file with a `* { transition: none; animation: none; }` rule.) */
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.5.13/hls.min.js"></script>
+<link rel="stylesheet" href="/static/studio.css">
+<link rel="stylesheet" href="/static/professional-light.css">
+</head>
+<body>
+<div class="grain-overlay" aria-hidden="true"></div>
+<div class="sidebar">
+  <div class="brand">kick-clipper</div>
+  <button class="nav-item active" id="nav-live" onclick="showTab('live')">Live Streamers</button>
+  <button class="nav-item" id="nav-vod" onclick="showTab('vod')">VODs</button>
+  <button class="nav-item" id="nav-library" onclick="showTab('library')">Library</button>
+  {% if is_owner %}
+  <a class="nav-item" href="/admin" style="display:block; text-decoration:none;">Admin</a>
+  {% endif %}
+  <div style="flex:1"></div>
+  <div id="creditWidget" style="font-size:11px; color:var(--muted); padding:10px 9px; border-top:1px solid var(--border); margin-top:10px;">
+    <div>Balance: <b class="mono" id="creditBalance">—</b></div>
+    <div>On hold: <b class="mono" id="creditHeld">—</b></div>
+    <a href="/pricing" style="color:var(--accent2); text-decoration:none; font-size:11px;">Top up →</a>
+  </div>
+  <a href="/logout" style="display:block; font-size:11px; color:var(--muted); text-decoration:none; padding:8px 9px;">Log out</a>
+</div>
+
+<div class="main">
+  {% include "_portfolio.html" %}
+  <div class="page-title" id="pageTitle">Live Streamers</div>
+  <div class="page-subtitle">Transcript-led discovery · frame review available in Admin · review clips before posting.</div>
+
+  <!-- LIVE TAB -->
+  <div id="tab-live" class="tab-content active">
+    <div class="panel">
+      <h2>Add a streamer</h2>
+      <div class="preset-row">
+        <button type="button" class="preset-btn" onclick="applyLivePreset('speed')">
+          <span class="preset-icon">⚡</span><span class="preset-name">Max Speed</span>
+          <span class="preset-desc">Fastest transcription, no tracking</span>
+        </button>
+        <button type="button" class="preset-btn" onclick="applyLivePreset('tiktok')">
+          <span class="preset-icon">📱</span><span class="preset-name">TikTok Ready</span>
+          <span class="preset-desc">9:16, tracking on, captions on</span>
+        </button>
+        <button type="button" class="preset-btn" onclick="applyLivePreset('quality')">
+          <span class="preset-icon">🎯</span><span class="preset-name">Best Quality</span>
+          <span class="preset-desc">Most accurate, more context</span>
+        </button>
+        <button type="button" class="preset-btn" onclick="applyLivePreset('balanced')">
+          <span class="preset-icon">⚖️</span><span class="preset-name">Balanced</span>
+          <span class="preset-desc">Sensible defaults</span>
+        </button>
+      </div>
+      <div style="margin:10px 0 14px;padding:12px 14px;border:1px solid rgba(167,139,250,.28);border-radius:12px;background:rgba(124,58,237,.08);font-size:13px;line-height:1.5;">
+        <strong>Transcription:</strong>
+        {% if env.get('TRANSCRIPTION_PROVIDER','whisper') == 'parakeet' %}Together NVIDIA Parakeet{% elif env.get('TRANSCRIPTION_PROVIDER') == 'mai' %}Azure MAI-Transcribe-2{% else %}Local Whisper{% endif %}.
+        <span style="opacity:.72">Moment analysis is a separate AI step.</span>
+      </div>
+      <div class="row">
+        <div class="field">
+          <label for="liveChannel">Live stream link</label>
+          <input id="liveChannel" type="text" placeholder="Kick, Twitch or YouTube live URL (Kick channel name also works)">
+        </div>
+        <div class="field">
+          <label for="liveProvider">Moment analysis AI <span style="opacity:.65;font-weight:400">(not transcription)</span></label>
+          <select id="liveProvider" disabled title="Configured by the owner in Admin → Moment analysis AI">
+            <option value="grok" {{ 'selected' if env.get('LLM_PROVIDER') == 'grok' else '' }}>Grok · finds/scores moments</option>
+            <option value="openai" {{ 'selected' if env.get('LLM_PROVIDER') == 'openai' else '' }}>OpenAI · finds/scores moments</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="liveThreshold">Clip threshold (0-100)</label>
+          <input id="liveThreshold" type="number" min="0" max="100" step="1" value="{{ env.get('CLIP_SCORE_THRESHOLD', '60') }}">
+        </div>
+      </div>
+      <div class="row">
+        <div class="field">
+          <label for="liveAspect">Aspect ratio</label>
+          <select id="liveAspect">
+            <option value="9:16">9:16 (TikTok / Shorts)</option>
+            <option value="16:9">16:9 (YouTube / original)</option>
+            <option value="4:3">4:3 (classic)</option>
+            <option value="1:1">1:1 (square)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="liveTrack">Face tracking</label>
+          <select id="liveTrack">
+            <option value="true">On (follow whoever's talking)</option>
+            <option value="false">Off (plain center crop)</option>
+          </select>
+        </div>
+        <div class="field checkbox-field">
+          <input type="checkbox" id="liveCaptions" checked>
+          <label for="liveCaptions" style="margin:0">Burn in captions</label>
+        </div>
+        <div class="field checkbox-field">
+          <input type="checkbox" id="liveSafety" checked>
+          <label for="liveSafety" style="margin:0" title="When on, a clip flagged as sensitive (minor present, explicit content, an unverified serious claim) gets a plain, factual title/caption instead of the usual clickbait style. Does not affect which clips get made -- rating is score-based either way.">Factual tone for sensitive clips</label>
+        </div>
+        <div class="field">
+          <label for="liveMaxClips">Max clips (0 = unlimited)</label>
+          <input id="liveMaxClips" type="number" min="0" value="0">
+        </div>
+        <div class="field">
+          <label for="liveChunkSpeed">Chunk speed</label>
+          <select id="liveChunkSpeed">
+            <option value="15">Fast (15s chunks -- quicker first results)</option>
+            <option value="30" selected>Normal (30s; Parakeet VOD uses optimized 240s windows)</option>
+            <option value="60">Precise (60s chunks -- more context per moment)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="liveWhisperModel">Transcription speed</label>
+          <select id="liveWhisperModel">
+            <option value="turbo">Turbo (GPU recommended)</option>
+            <option value="large-v3">Large v3 (accuracy / GPU)</option>
+            <option value="tiny">Fastest (least accurate)</option>
+            <option value="base">Fast</option>
+            <option value="small" selected>Balanced (default)</option>
+            <option value="medium">Most accurate (slowest)</option>
+          </select>
+        </div>
+      </div>
+      <span class="advanced-toggle" onclick="toggleAdvanced('liveAdvanced')">+ Priority names</span>
+      <div class="row advanced-row" id="liveAdvanced">
+        <div class="field">
+          <label for="livePriorityNames">Priority names (comma-separated)</label>
+          <input id="livePriorityNames" type="text" value="{{ env.get('PRIORITY_NAMES', '') }}" placeholder="N3on, Sneako, Clavicular">
+        </div>
+      </div>
+      <div style="margin-top:14px">
+        <button class="btn-primary" onclick="startLive()">Start this streamer</button>
+      </div>
+      <div id="liveError" class="error-msg"></div>
+    </div>
+
+    <div class="panel">
+      <h2>Running streamers</h2>
+      <div id="liveJobs"></div>
+      <div id="liveEmpty" class="empty-state">No streamers running yet.</div>
+    </div>
+  </div>
+
+  <!-- VOD TAB -->
+  <div id="tab-vod" class="tab-content">
+    <div class="panel">
+      <h2>Process a VOD</h2>
+      <div class="preset-row">
+        <button type="button" class="preset-btn" onclick="applyVodPreset('speed')">
+          <span class="preset-icon">⚡</span><span class="preset-name">Max Speed</span>
+          <span class="preset-desc">Fastest transcription, no tracking</span>
+        </button>
+        <button type="button" class="preset-btn" onclick="applyVodPreset('tiktok')">
+          <span class="preset-icon">📱</span><span class="preset-name">TikTok Ready</span>
+          <span class="preset-desc">9:16, tracking on, captions on</span>
+        </button>
+        <button type="button" class="preset-btn" onclick="applyVodPreset('youtube')">
+          <span class="preset-icon">📺</span><span class="preset-name">YouTube Long-form</span>
+          <span class="preset-desc">16:9, no crop, precise context</span>
+        </button>
+        <button type="button" class="preset-btn" onclick="applyVodPreset('quality')">
+          <span class="preset-icon">🎯</span><span class="preset-name">Best Quality</span>
+          <span class="preset-desc">Most accurate, more context</span>
+        </button>
+      </div>
+      <div class="row">
+        <div class="field">
+          <label for="vodInput">VOD URL or Kick channel</label>
+          <input id="vodInput" type="text" placeholder="https://kick.com/username or https://kick.com/username/videos/... or a YouTube URL">
+          <input id="vodUpload" type="file" accept="video/mp4,video/quicktime,video/x-matroska,video/webm,video/mp2t" style="margin-top:8px">
+          <button type="button" class="btn secondary" onclick="uploadVodFile()" style="margin-top:6px">Use uploaded video</button>
+        </div>
+        <div class="field">
+          <label for="vodChannel">Streamer name (for organizing output)</label>
+          <input id="vodChannel" type="text" placeholder="e.g. deenthegreat">
+        </div>
+      </div>
+      {% if is_owner %}
+      <div class="row">
+        <div class="field">
+          <label for="vodStreamUrl">Owner debug only — direct .m3u8 stream URL (bypasses source resolution entirely)</label>
+          <input id="vodStreamUrl" type="text" placeholder="https://.../master.m3u8 (from browser DevTools Network tab)" oninput="loadPreview()">
+        </div>
+      </div>
+      {% endif %}
+
+      <div id="previewWrap" style="display:none; margin-bottom:16px;">
+        <video id="previewVideo" controls style="width:100%; max-height:360px; border-radius:8px; background:#000;"></video>
+        <div class="row" style="margin-top:10px;">
+          <div class="field">
+            <label>Start time</label>
+            <div style="display:flex; gap:8px;">
+              <input id="vodStartTime" type="text" placeholder="0:00" readonly style="background:#0d1220;">
+              <button type="button" class="btn-secondary" onclick="setRangeFromPlayer('start')">Set from player</button>
+            </div>
+          </div>
+          <div class="field">
+            <label>End time</label>
+            <div style="display:flex; gap:8px;">
+              <input id="vodEndTime" type="text" placeholder="(end of video)" readonly style="background:#0d1220;">
+              <button type="button" class="btn-secondary" onclick="setRangeFromPlayer('end')">Set from player</button>
+            </div>
+          </div>
+          <div class="field checkbox-field" style="padding-top:0;">
+            <button type="button" class="btn-secondary" onclick="clearRange()">Clear range (process whole VOD)</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label for="vodStartManual">Or type start time manually (seconds or mm:ss)</label>
+          <input id="vodStartManual" type="text" placeholder="e.g. 10:00" oninput="syncManualRange()">
+        </div>
+        <div class="field">
+          <label for="vodEndManual">Or type end time manually (seconds or mm:ss)</label>
+          <input id="vodEndManual" type="text" placeholder="e.g. 20:00" oninput="syncManualRange()">
+        </div>
+      </div>
+      <div style="margin:10px 0 14px;padding:12px 14px;border:1px solid rgba(167,139,250,.28);border-radius:12px;background:rgba(124,58,237,.08);font-size:13px;line-height:1.5;">
+        <strong>Transcription engine:</strong>
+        {% if env.get('TRANSCRIPTION_PROVIDER','whisper') == 'parakeet' %}
+          Together NVIDIA Parakeet · cloud ASR
+        {% elif env.get('TRANSCRIPTION_PROVIDER') == 'mai' %}
+          Azure MAI-Transcribe-2
+        {% else %}
+          Local Whisper
+        {% endif %}
+        <br><span style="opacity:.72">This turns audio into text. The separate Moment analysis AI below reads the transcript and decides which moments are worth clipping.</span>
+      </div>
+      <div class="row">
+        <div class="field">
+          <label for="vodProvider">Moment analysis AI <span style="opacity:.65;font-weight:400">(not transcription)</span></label>
+          <select id="vodProvider" disabled title="Configured by the owner in Admin → Moment analysis AI">
+            <option value="grok" {{ 'selected' if env.get('LLM_PROVIDER') == 'grok' else '' }}>Grok · finds/scores moments</option>
+            <option value="openai" {{ 'selected' if env.get('LLM_PROVIDER') == 'openai' else '' }}>OpenAI · finds/scores moments</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="vodThreshold">Clip threshold (0-100)</label>
+          <input id="vodThreshold" type="number" min="0" max="100" step="1" value="{{ env.get('CLIP_SCORE_THRESHOLD', '60') }}">
+        </div>
+        <div class="field">
+          <label for="vodAspect">Aspect ratio</label>
+          <select id="vodAspect">
+            <option value="9:16">9:16 (TikTok / Shorts)</option>
+            <option value="16:9">16:9 (YouTube / original)</option>
+            <option value="4:3">4:3 (classic)</option>
+            <option value="1:1">1:1 (square)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="vodTrack">Face tracking</label>
+          <select id="vodTrack">
+            <option value="true">On (follow whoever's talking)</option>
+            <option value="false">Off (plain center crop)</option>
+          </select>
+        </div>
+      </div>
+      <div class="row">
+        <div class="field checkbox-field">
+          <input type="checkbox" id="vodCaptions" checked>
+          <label for="vodCaptions" style="margin:0">Burn in captions</label>
+        </div>
+        <div class="field checkbox-field">
+          <input type="checkbox" id="vodSafety" checked>
+          <label for="vodSafety" style="margin:0" title="When on, a clip flagged as sensitive (minor present, explicit content, an unverified serious claim) gets a plain, factual title/caption instead of the usual clickbait style. Does not affect which clips get made -- rating is score-based either way.">Factual tone for sensitive clips</label>
+        </div>
+        <div class="field">
+          <label for="vodMaxClips">Max clips{% if is_owner %} (0 = unlimited){% else %} per job{% endif %}</label>
+          <input id="vodMaxClips" type="number" min="{{ 0 if is_owner else 1 }}" value="12">
+        </div>
+        <div class="field">
+          <label for="vodChunkSpeed">Live / local-ASR chunk size</label>
+          <select id="vodChunkSpeed">
+            <option value="15">Fast (15s chunks -- quicker first results)</option>
+            <option value="30" selected>Normal (30s; Parakeet VOD uses optimized 240s windows)</option>
+            <option value="60">Precise (60s chunks -- more context per moment)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="vodWhisperModel">Transcription speed</label>
+          <select id="vodWhisperModel">
+            <option value="turbo">Turbo (GPU recommended)</option>
+            <option value="large-v3">Large v3 (accuracy / GPU)</option>
+            <option value="tiny">Fastest (least accurate)</option>
+            <option value="base">Fast</option>
+            <option value="small" selected>Balanced (default)</option>
+            <option value="medium">Most accurate (slowest)</option>
+          </select>
+        </div>
+      </div>
+      <span class="advanced-toggle" onclick="toggleAdvanced('vodAdvanced')">+ Priority names</span>
+      <div class="row advanced-row" id="vodAdvanced">
+        <div class="field">
+          <label for="vodPriorityNames">Priority names (comma-separated)</label>
+          <input id="vodPriorityNames" type="text" value="{{ env.get('PRIORITY_NAMES', '') }}" placeholder="N3on, Sneako, Clavicular">
+        </div>
+      </div>
+      <div style="margin-top:14px">
+        <button class="btn-primary" onclick="startVod()">Process VOD</button>
+      </div>
+      <div id="vodError" class="error-msg"></div>
+    </div>
+
+    <div class="panel">
+      <h2>VOD jobs</h2>
+      <div id="vodJobs"></div>
+      <div id="vodEmpty" class="empty-state">No VOD jobs yet.</div>
+    </div>
+  </div>
+
+  <!-- LIBRARY TAB -->
+  <div id="tab-library" class="tab-content">
+    <div class="panel">
+      <h2>All clips</h2>
+      <button class="btn-secondary" onclick="deleteAllClips(this)">Delete all my clips</button>
+      <div class="row" style="margin-bottom:16px">
+        <div class="field">
+          <label for="libraryChannelFilter">Filter by channel</label>
+          <select id="libraryChannelFilter" onchange="changeLibraryFilter()">
+            <option value="">All channels</option>
+          </select>
+        </div>
+      </div>
+      <div id="libraryGrid" class="clip-grid"></div>
+      <div id="libraryPager" style="display:none;text-align:center;margin-top:18px">
+        <div id="libraryCount" class="status-text" style="margin-bottom:9px"></div>
+        <button type="button" class="btn-secondary" onclick="showMoreLibrary()">Load 24 more clips</button>
+      </div>
+      <div id="libraryEmpty" class="empty-state">No clips saved yet -- clips appear here automatically as soon as they're produced, whether or not their job is still running.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+let activeLiveChannels = new Set();
+let activeVodChannels = new Set();
+let currentTab = 'live';
+
+function showTab(name) {
+  currentTab = name;
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  document.getElementById('nav-' + name).classList.add('active');
+  const titles = { live: 'Live Streamers', vod: 'VODs', library: 'Library' };
+  document.getElementById('pageTitle').textContent = titles[name] || name;
+  // Refresh only the panel the user opened. Previously every hidden panel
+  // polled forever, so multiple browser tabs could flood the local server.
+  if (name === 'live') { pollLive(); pollLiveClips(); }
+  if (name === 'vod') { pollVod(); pollVodClips(); pollState.vodDelay = 10000; clearTimeout(pollState.vodTimer); pollState.vodTimer = setTimeout(scheduleVodPoll, 10000); }
+  if (name === 'library') pollLibrary();
+}
+
+function toggleAdvanced(id) {
+  document.getElementById(id).classList.toggle('open');
+}
+
+async function startLive() {
+  const errorEl = document.getElementById('liveError');
+  errorEl.style.display = 'none';
+  const channel = document.getElementById('liveChannel').value.trim();
+
+  const res = await fetch('/api/live/start', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      source: channel,
+      provider: document.getElementById('liveProvider').value,
+      threshold: document.getElementById('liveThreshold').value,
+      aspect_ratio: document.getElementById('liveAspect').value,
+      track_faces: document.getElementById('liveTrack').value === 'true',
+      captions_enabled: document.getElementById('liveCaptions').checked,
+      safety_flags: document.getElementById('liveSafety').checked,
+      priority_names: document.getElementById('livePriorityNames').value,
+      max_clips: parseInt(document.getElementById('liveMaxClips').value) || 0,
+      chunk_seconds: parseInt(document.getElementById('liveChunkSpeed').value) || 30,
+      whisper_model: document.getElementById('liveWhisperModel').value,
+    }),
+  });
+  const data = await res.json();
+  if (!data.ok) { errorEl.textContent = data.error; errorEl.style.display = 'block'; return; }
+  activeLiveChannels.add(channel);
+  document.getElementById('liveChannel').value = '';
+  pollLive();
+}
+
+async function stopLive(channel) {
+  await fetch('/api/live/stop', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ channel }) });
+  pollLive();
+}
+
+async function removeLive(channel) {
+  await fetch('/api/live/remove', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ channel }) });
+  activeLiveChannels.delete(channel);
+  const card = document.getElementById('live-card-' + channel);
+  if (card) card.remove();
+}
+
+
+async function uploadVodFile(){
+  const el=document.getElementById('vodUpload');
+  const file=el && el.files && el.files[0];
+  if(!file){ document.getElementById('vodError').textContent='Choose a video file first.'; return; }
+  const fd=new FormData(); fd.append('file',file);
+  const res=await fetch('/api/upload',{method:'POST',body:fd});
+  const data=await res.json();
+  if(!data.ok){ document.getElementById('vodError').textContent=data.error||'Upload failed'; return; }
+  document.getElementById('vodInput').value=data.input;
+  document.getElementById('vodError').textContent=`Ready: ${data.display_name}`;
+}
+
+async function pollLive() {
+  const res = await fetch('/api/live/status');
+  const jobs = await res.json();
+  Object.keys(jobs).forEach(ch => activeLiveChannels.add(ch));
+
+  const container = document.getElementById('liveJobs');
+  const empty = document.getElementById('liveEmpty');
+  const channels = Array.from(activeLiveChannels);
+  empty.style.display = channels.length ? 'none' : 'block';
+
+  for (const channel of channels) {
+    const info = jobs[channel] || { running: false, log: [] };
+    let card = document.getElementById('live-card-' + channel);
+    if (!card) {
+      card = document.createElement('div');
+      card.className = 'job-card';
+      card.id = 'live-card-' + channel;
+      card.innerHTML = `
+        <div class="job-header">
+          <div><span class="status-dot" id="dot-${channel}"></span><span class="job-name">${channel}</span> <span class="status-text" id="count-${channel}"></span></div>
+          <div>
+            <span class="status-text" id="text-${channel}"></span>
+            <button class="btn-secondary" style="margin-left:10px" onclick="stopLive('${channel}')">Stop</button>
+            <button class="btn-danger" style="margin-left:6px" onclick="removeLive('${channel}')">Remove</button>
+          </div>
+        </div>
+        <div class="job-log" id="log-${channel}"></div>
+        <div id="progress-${channel}"></div>
+        <div class="clip-grid" id="clips-${channel}"></div>
+      `;
+      container.appendChild(card);
+    }
+    document.getElementById('dot-' + channel).classList.toggle('live', info.running);
+    document.getElementById('text-' + channel).textContent = info.running ? 'Running' : 'Stopped';
+    const logEl = document.getElementById('log-' + channel);
+    const atBottom = logEl.scrollTop + logEl.clientHeight >= logEl.scrollHeight - 20;
+    logEl.textContent = info.log.join('\n');
+    if (atBottom) logEl.scrollTop = logEl.scrollHeight;
+    renderProgress('progress-' + channel, info.progress, info.guardian);
+  }
+}
+
+async function pollLiveClips() {
+  for (const channel of activeLiveChannels) {
+    const res = await fetch('/api/live/clips?channel=' + encodeURIComponent(channel));
+    const clips = await res.json();
+    const grid = document.getElementById('clips-' + channel);
+    if (!grid) continue;
+    renderGridIfChanged(grid, clips);
+    const countEl = document.getElementById('count-' + channel);
+    if (countEl) countEl.textContent = `· ${clips.length} clip${clips.length === 1 ? '' : 's'}`;
+  }
+}
+
+const PRESETS = {
+  speed:    { aspect: '9:16', track: 'false', captions: false, chunk: '30', whisper: 'tiny',   threshold: 50, maxClips: 8 },
+  tiktok:   { aspect: '9:16', track: 'true',  captions: true,  chunk: '15', whisper: 'small',  threshold: 60, maxClips: 0 },
+  youtube:  { aspect: '16:9', track: 'false', captions: true,  chunk: '60', whisper: 'small',  threshold: 60, maxClips: 0 },
+  quality:  { aspect: '9:16', track: 'true',  captions: true,  chunk: '60', whisper: 'medium', threshold: 60, maxClips: 0 },
+  balanced: { aspect: '9:16', track: 'true',  captions: true,  chunk: '30', whisper: 'small',  threshold: 60, maxClips: 0 },
+};
+
+function applyPreset(prefix, name) {
+  const p = PRESETS[name];
+  if (!p) return;
+  document.getElementById(prefix + 'Aspect').value = p.aspect;
+  document.getElementById(prefix + 'Track').value = p.track;
+  document.getElementById(prefix + 'Captions').checked = p.captions;
+  document.getElementById(prefix + 'ChunkSpeed').value = p.chunk;
+  document.getElementById(prefix + 'WhisperModel').value = p.whisper;
+  document.getElementById(prefix + 'Threshold').value = p.threshold;
+  document.getElementById(prefix + 'MaxClips').value = p.maxClips;
+}
+
+function applyLivePreset(name) { applyPreset('live', name); }
+function applyVodPreset(name) { applyPreset('vod', name); }
+
+let hlsPlayer = null;
+
+function parseTimeToSeconds(text) {
+  if (!text) return null;
+  text = text.trim();
+  if (!text) return null;
+  if (text.includes(':')) {
+    const parts = text.split(':').map(Number);
+    return parts.reduce((acc, p) => acc * 60 + p, 0);
+  }
+  const n = parseFloat(text);
+  return isNaN(n) ? null : n;
+}
+
+function formatSeconds(s) {
+  s = Math.floor(s);
+  const m = Math.floor(s / 60);
+  const sec = s % 60;
+  return `${m}:${sec.toString().padStart(2, '0')}`;
+}
+
+function loadPreview() {
+  const url = document.getElementById('vodStreamUrl').value.trim();
+  const wrap = document.getElementById('previewWrap');
+  const video = document.getElementById('previewVideo');
+  if (!url) { wrap.style.display = 'none'; return; }
+
+  wrap.style.display = 'block';
+  if (hlsPlayer) { hlsPlayer.destroy(); hlsPlayer = null; }
+
+  if (window.Hls && Hls.isSupported()) {
+    hlsPlayer = new Hls();
+    hlsPlayer.loadSource(url);
+    hlsPlayer.attachMedia(video);
+  } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+    video.src = url;  // Safari has native HLS support
+  }
+}
+
+function setRangeFromPlayer(which) {
+  const video = document.getElementById('previewVideo');
+  const t = video.currentTime || 0;
+  if (which === 'start') {
+    document.getElementById('vodStartTime').value = formatSeconds(t);
+    document.getElementById('vodStartManual').value = formatSeconds(t);
+  } else {
+    document.getElementById('vodEndTime').value = formatSeconds(t);
+    document.getElementById('vodEndManual').value = formatSeconds(t);
+  }
+}
+
+function syncManualRange() {
+  document.getElementById('vodStartTime').value = document.getElementById('vodStartManual').value;
+  document.getElementById('vodEndTime').value = document.getElementById('vodEndManual').value;
+}
+
+function clearRange() {
+  ['vodStartTime', 'vodEndTime', 'vodStartManual', 'vodEndManual'].forEach(id => document.getElementById(id).value = '');
+}
+
+async function startVod() {
+  const errorEl = document.getElementById('vodError');
+  errorEl.style.display = 'none';
+  const channel = document.getElementById('vodChannel').value.trim();
+
+  const startSeconds = parseTimeToSeconds(document.getElementById('vodStartManual').value);
+  const endSeconds = parseTimeToSeconds(document.getElementById('vodEndManual').value);
+
+  const res = await fetch('/api/vod/start', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      input: document.getElementById('vodInput').value.trim(),
+      stream_url: (document.getElementById('vodStreamUrl') || {}).value?.trim() || '',
+      start_time: startSeconds,
+      end_time: endSeconds,
+      channel,
+      provider: document.getElementById('vodProvider').value,
+      threshold: document.getElementById('vodThreshold').value,
+      aspect_ratio: document.getElementById('vodAspect').value,
+      track_faces: document.getElementById('vodTrack').value === 'true',
+      captions_enabled: document.getElementById('vodCaptions').checked,
+      safety_flags: document.getElementById('vodSafety').checked,
+      priority_names: document.getElementById('vodPriorityNames').value,
+      max_clips: parseInt(document.getElementById('vodMaxClips').value) || 0,
+      chunk_seconds: parseInt(document.getElementById('vodChunkSpeed').value) || 30,
+      whisper_model: document.getElementById('vodWhisperModel').value,
+    }),
+  });
+  const data = await res.json();
+  if (!data.ok) { errorEl.textContent = data.error; errorEl.style.display = 'block'; return; }
+  activeVodChannels.add(channel);
+  pollVod();
+}
+
+async function pollVod() {
+  const res = await fetch('/api/vod/status', { cache: 'no-store', signal: AbortSignal.timeout(10000), headers: { 'Accept': 'application/json' } });
+  if (!res.ok) throw new Error(`Status request failed (${res.status})`);
+  const jobs = await res.json();
+
+  const container = document.getElementById('vodJobs');
+  const empty = document.getElementById('vodEmpty');
+  const jobIds = Object.keys(jobs);
+  empty.style.display = jobIds.length ? 'none' : 'block';
+
+  for (const jobId of jobIds) {
+    const info = jobs[jobId];
+    activeVodChannels.add(info.channel);
+    let card = document.getElementById('vod-card-' + jobId);
+    if (!card) {
+      card = document.createElement('div');
+      card.className = 'job-card';
+      card.id = 'vod-card-' + jobId;
+      card.innerHTML = `
+        <div class="job-header">
+          <div><span class="status-dot" id="vdot-${jobId}"></span><span class="job-name">${info.channel}</span> <span class="status-text" id="vcount-${jobId}"></span></div>
+          <div>
+            <span class="status-text" id="vtext-${jobId}"></span>
+            <button class="btn-danger" style="margin-left:10px" onclick="removeVod('${jobId}')">Remove</button>
+          </div>
+        </div>
+        <div class="job-log" id="vlog-${jobId}"></div>
+        <div id="vprogress-${jobId}"></div>
+        <div class="clip-grid" id="vclips-${info.channel}"></div>
+      `;
+      container.appendChild(card);
+    }
+    document.getElementById('vdot-' + jobId).classList.toggle('live', info.running);
+    document.getElementById('vtext-' + jobId).textContent = info.running ? 'Processing...' : 'Done';
+    const vcountEl = document.getElementById('vcount-' + jobId);
+    if (vcountEl) {
+      const n = vodClipCounts[info.channel] || 0;
+      vcountEl.textContent = `· ${n} clip${n === 1 ? '' : 's'}`;
+    }
+    const logEl = document.getElementById('vlog-' + jobId);
+    const atBottom = logEl.scrollTop + logEl.clientHeight >= logEl.scrollHeight - 20;
+    logEl.textContent = info.log.join('\n');
+    if (atBottom) logEl.scrollTop = logEl.scrollHeight;
+    renderProgress('vprogress-' + jobId, info.progress, info.guardian);
+  }
+  // Return whether any job is still changing so the scheduler can back off
+  // while the page is idle without making active VOD progress feel laggy.
+  const signature = JSON.stringify(Object.values(jobs).map(j => [j.running, j.progress?.pct, j.progress?.stage, j.log?.length]));
+  const changed = signature !== pollState.vodSignature;
+  pollState.vodSignature = signature;
+  return { active: jobIds.some(id => jobs[id].running), changed };
+}
+
+async function removeVod(jobId) {
+  await fetch('/api/vod/remove', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ job_id: jobId }) });
+  const card = document.getElementById('vod-card-' + jobId);
+  if (card) card.remove();
+}
+
+const STAGE_LABELS = {
+  audio_pull: { now: 'Pulling audio only (video comes later, only for kept clips)', next: 'Transcribing audio' },
+  transcribe: { now: 'Transcribing audio', next: 'Scoring moments for clip-worthiness' },
+  scout: { now: 'Finding preliminary moments', next: 'Detailed candidate analysis' },
+  ranking: { now: 'Ranking final moments', next: 'Rendering selected video ranges' },
+  review: { now: 'Refining candidate context', next: 'Ranking final moments' },
+  scan: { now: 'Scoring moments for clip-worthiness', next: 'Cutting the clips that qualify' },
+  cut: { now: 'Cutting + captioning clips', next: 'Applying layout/face-tracking' },
+  layout: { now: 'Applying layout + face-tracking', next: 'Writing titles and posts' },
+  encode: { now: 'Rendering selected clips', next: 'Finished' },
+  done: { now: 'Finished', next: '' },
+};
+
+function renderProgress(elId, progress, guardian) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  if (!progress) { el.innerHTML = guardianHtml(guardian); return; }
+  const etaText = progress.eta_seconds != null ? ` · Total ETA: about ${Math.ceil(progress.eta_seconds / 60)} min` : ' · Total ETA: estimating…';
+  const labels = STAGE_LABELS[progress.stage] || { now: progress.stage, next: '' };
+  const nextLine = labels.next ? `<div class="status-next">Next: ${labels.next}</div>` : '';
+  el.innerHTML = `
+    <div class="progress-wrap">
+      <div class="status-now">Now: ${labels.now}</div>
+      ${nextLine}
+      <div class="progress-label"><span>Overall progress · ${progress.stage || 'starting'} ${progress.stage_pct ?? 0}%</span><span>${progress.pct}%${etaText}</span></div>
+      <div class="progress-bar-bg"><div class="progress-bar-fill" style="width:${progress.pct}%"></div></div>
+    </div>${guardianHtml(guardian)}
+  `;
+}
+
+let vodClipCounts = {};  // channel -> count, used to label VOD job cards
+
+async function pollVodClips() {
+  if (document.visibilityState !== 'visible' || currentTab !== 'vod') return;
+  for (const channel of activeVodChannels) {
+    const res = await fetch('/api/vod/clips?channel=' + encodeURIComponent(channel));
+    if (!res.ok) continue;
+    const clips = await res.json();
+    vodClipCounts[channel] = clips.length;
+    const grid = document.getElementById('vclips-' + channel);
+    if (!grid) continue;
+    renderGridIfChanged(grid, clips);
+  }
+}
+
+function starsHtml(score) {
+  // score is 0-100 -- map onto a 5-star scale, with partial-star fill
+  const fillPct = Math.max(0, Math.min(100, score));
+  return `
+    <span class="stars">
+      <span class="stars-empty">\u2605\u2605\u2605\u2605\u2605</span>
+      <span class="stars-filled" style="width:${fillPct}%">\u2605\u2605\u2605\u2605\u2605</span>
+    </span>
+  `;
+}
+
+function clipCardHtml(c) {
+  const s = c.score;
+  let scoreHtml = '';
+  let breakdownHtml = '';
+  let reasonHtml = '';
+  const cardId = c.id.replace(/[^a-zA-Z0-9]/g, '') + '_' + (c.subpath || '').replace(/[^a-zA-Z0-9]/g, '');
+  if (s) {
+    scoreHtml = `
+      <div class="score-row">
+        ${starsHtml(s.score)}
+        <span class="score-badge">${s.score}</span>
+        <span class="score-tier">${s.tier || ''}</span>
+        ${s.moment_score != null ? `<span class="score-badge">Moment ${s.moment_score}</span>` : ''}
+        ${s.cut_score != null ? `<span class="score-badge">Cut ${s.cut_score}</span>` : ''}
+        <span class="score-toggle" onclick="document.getElementById('breakdown-${cardId}').classList.toggle('open')">breakdown</span>
+      </div>`;
+    if (s.reason) {
+      reasonHtml = `<div class="score-reason">Why: ${escapeHtml(s.reason)}</div>` +
+        (s.event_class ? `<div class="score-reason">Class: ${escapeHtml(s.event_class)} · Payoff: ${escapeHtml(s.payoff_type || 'none')}</div>` : '') +
+        (s.suggested_trim ? `<div class="score-reason"><b>Trim suggestion:</b> ${escapeHtml(s.suggested_trim)}</div>` : '');
+    }
+    if (s.breakdown) {
+      const rows = Object.entries(s.breakdown).map(([k, v]) => `${k.replace(/_/g, ' ')}: ${v}`).join(' · ');
+      breakdownHtml = `<div class="score-breakdown" id="breakdown-${cardId}">${rows}</div>`;
+    }
+  }
+
+  const firstLine = (c.posts || '').split('\n').find(l => l.trim() && !l.startsWith('===')) || '';
+  const hasRecipe = !!c.editable;
+
+  const editPanel = hasRecipe ? `
+    <button class="edit-toggle" onclick="openEditor('${c.subpath}', '${cardId}')">✎ Edit clip & overlay</button>
+    <div class="edit-panel" id="edit-${cardId}">
+      <div class="edit-row">
+        <div class="edit-field">
+          <label>Start (s)</label>
+          <input type="number" step="0.1" id="editStart-${cardId}" placeholder="unchanged">
+        </div>
+        <div class="edit-field">
+          <label>End (s)</label>
+          <input type="number" step="0.1" id="editEnd-${cardId}" placeholder="unchanged">
+        </div>
+      </div>
+      <div class="edit-row">
+        <div class="edit-field">
+          <label>Aspect</label>
+          <select id="editAspect-${cardId}">
+            <option value="9:16">9:16</option>
+            <option value="16:9">16:9</option>
+            <option value="1:1">1:1</option>
+            <option value="4:5">4:5</option>
+            <option value="4:3">4:3</option>
+          </select>
+        </div>
+        <div class="edit-field">
+          <label>Track</label>
+          <select id="editTrack-${cardId}">
+            <option value="off">Off</option>
+            <option value="auto">Auto follow</option>
+            <option value="lock">Lock on speaker</option>
+          </select>
+        </div>
+        <div class="edit-field">
+          <label>Layout</label>
+          <select id="editLayout-${cardId}">
+            <option value="follow">Follow one</option>
+            <option value="center">Center crop</option>
+            <option value="split2">Split (2 faces)</option>
+          </select>
+        </div>
+      </div>
+      <div class="edit-row">
+        <div class="edit-field checkbox-field" style="padding-top:0">
+          <input type="checkbox" id="editCaptions-${cardId}" checked>
+          <label style="margin:0">Captions</label>
+        </div>
+        <div class="edit-field">
+          <label>Overlay title (first N sec)</label>
+          <input type="text" id="editOverlay-${cardId}" placeholder="e.g. HE SAID WHAT">
+        </div>
+        <div class="edit-field">
+          <label>Seconds shown</label>
+          <input type="number" step="0.5" id="editOverlaySec-${cardId}" value="3">
+        </div>
+      </div>
+      <div class="edit-row">
+        <button class="btn-primary" onclick="rerenderClip('${c.subpath}', '${cardId}')">Re-render this clip</button>
+        <span class="edit-status" id="editStatus-${cardId}"></span>
+      </div>
+    </div>
+  ` : '';
+
+  return `
+    <div class="clip-card">
+      <video controls preload="metadata" src="${c.video_url}" id="video-${cardId}"></video>
+      <div class="clip-body">
+        <div class="clip-title">${escapeHtml(firstLine)}</div>
+        ${scoreHtml}
+        ${reasonHtml}
+        ${c.visual_review ? `<details><summary>Visual context review</summary><p>${escapeHtml(JSON.stringify(c.visual_review))}</p></details>` : ''}
+        ${breakdownHtml}
+        <div class="clip-desc">${escapeHtml(c.posts)}</div>
+        <textarea class="clip-note" id="note-${cardId}" placeholder="Add a note about this clip..." onblur="saveNote('${c.subpath}', this.value)">${escapeHtml(c.note || '')}</textarea>
+        ${editPanel}
+        <div class="clip-actions">
+          <button class="btn-secondary" onclick="regeneratePosts('${c.subpath}',this)">Refresh titles & overlay</button>
+          <button class="btn-secondary" onclick="deleteClip('${c.subpath}',this)">Delete clip</button>
+          <a class="btn-secondary" href="${c.video_url}" download>Download</a>
+          <button class="btn-secondary" onclick="copyText(this, this.closest('.clip-body').querySelector('.clip-desc').textContent)">Copy posts</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+
+function guardianHtml(g) {
+  if (!g) return '';
+  return `<section class="guardian" aria-live="polite"><strong>◉ Log Guardian · ${escapeHtml(g.state)}</strong>
+  <p>${g.incidents.length} alerts detected. ${escapeHtml(g.note || '')}</p>
+  ${g.incidents.slice(-4).map(a=>`<details class="${a.severity}"><summary>${escapeHtml(a.category)} · ${escapeHtml(a.message.slice(0,130))}</summary><p>${escapeHtml(a.message)}</p><p>${escapeHtml(a.action)}</p></details>`).join('')}</section>`;
+}
+async function openEditor(subpath, id) {
+  const panel = document.getElementById('edit-'+id);
+  if (panel.classList.contains('open')) { panel.classList.remove('open'); return; }
+  panel.classList.add('open');
+  const status=document.getElementById('editStatus-'+id);
+  status.textContent='Loading saved settings…';
+  try {
+    const response=await fetch('/api/clip/recipe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({subpath})});
+    const data=await response.json(); if(!data.ok)throw Error(data.error);
+    const r=data.recipe;
+    for(const [field,prefix] of Object.entries({start:'Start',end:'End',aspect:'Aspect',track:'Track',layout:'Layout',overlay_text:'Overlay',overlay_seconds:'OverlaySec'})) {
+      document.getElementById('edit'+prefix+'-'+id).value=r[field] ?? '';
+    }
+    document.getElementById('editCaptions-'+id).checked=r.captions_enabled;
+    status.textContent='Settings loaded from the original clip.';
+  } catch(e) {status.textContent='Could not load editor: '+e.message;}
+}
+async function regeneratePosts(subpath,button) {
+  button.disabled=true;button.textContent='Writing…';
+  try {
+    const r=await fetch('/api/clip/regenerate_posts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({subpath})});
+    const data=await r.json();if(!data.ok)throw Error(data.error);
+    button.closest('.clip-body').querySelector('.clip-desc').textContent=data.posts;
+  } catch(e){alert(e.message);}finally{button.disabled=false;button.textContent='Refresh titles & overlay';}
+}
+async function deleteClip(subpath,button) {
+  if(!confirm('Remove this clip from the library? It will be kept in the local .trash folder.'))return;
+  button.disabled=true;
+  try {
+    const response=await fetch('/api/clip/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({subpath})});
+    const data=await response.json();if(!data.ok)throw Error(data.error);
+    button.closest('.clip-card').remove();
+  } catch(e){alert(e.message);button.disabled=false;}
+}
+async function deleteAllClips(button) {
+  if(!confirm('Remove ALL clips from your account, across every channel? Videos will be moved to local trash. This ignores the channel filter.')) return;
+  button.disabled=true;
+  try {
+    const response=await fetch('/api/clips/delete-all',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({confirmation:'DELETE ALL'})});
+    const data=await response.json(); if(!data.ok) throw Error(data.error || 'Deletion failed');
+    await pollLibrary(); alert(`${data.deleted} clips moved to trash.`);
+  } catch(e) { alert(e.message); }
+  finally {button.disabled=false;}
+}
+document.addEventListener('DOMContentLoaded',()=>{
+ const main=document.querySelector('.main') || document.querySelector('main');
+ if(main){const banner=document.createElement('section');banner.className='studio-banner';banner.innerHTML='<small>KICK CLIPPER / STUDIO</small><h1>Long stream.<br>Standout moments.</h1><p>Find the story. Shape the edit. Give every platform its own angle.</p><div class="studio-depth" aria-hidden="true">MOMENT / TIMELINE<i></i><i style="width:65%"></i><i style="width:85%"></i></div>';main.prepend(banner);}
+});
+
+async function saveNote(subpath, note) {
+  await fetch('/api/clip/note', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ subpath, note }),
+  });
+}
+
+async function rerenderClip(subpath, cardId) {
+  const statusEl = document.getElementById('editStatus-' + cardId);
+  statusEl.textContent = 'Rendering...';
+  const renderButton=statusEl.previousElementSibling;
+  renderButton.disabled=true;
+  try {
+
+  const body = { subpath };
+  const start = document.getElementById('editStart-' + cardId).value;
+  const end = document.getElementById('editEnd-' + cardId).value;
+  if (start) body.start = parseFloat(start);
+  if (end) body.end = parseFloat(end);
+  body.aspect = document.getElementById('editAspect-' + cardId).value;
+  body.track = document.getElementById('editTrack-' + cardId).value;
+  body.layout = document.getElementById('editLayout-' + cardId).value;
+  body.captions_enabled = document.getElementById('editCaptions-' + cardId).checked;
+  body.overlay_text = document.getElementById('editOverlay-' + cardId).value;
+  body.overlay_seconds = parseFloat(document.getElementById('editOverlaySec-' + cardId).value) || 3.0;
+
+  const res = await fetch('/api/clip/update', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  const data = await res.json();
+
+  if (!data.ok) {
+    statusEl.textContent = 'Failed: ' + data.error;
+    return;
+  }
+
+  statusEl.textContent = 'Done!';
+  const video = document.getElementById('video-' + cardId);
+  video.src = data.video_url + '?t=' + Date.now();  // cache-bust so the new render actually shows
+  setTimeout(() => { statusEl.textContent = ''; }, 3000);
+  } catch(e) {statusEl.textContent='Render failed: '+e.message;}
+  finally {renderButton.disabled=false;}
+}
+
+function copyText(btn, text) {
+  navigator.clipboard.writeText(text);
+  const original = btn.textContent;
+  btn.textContent = 'Copied!';
+  setTimeout(() => btn.textContent = original, 1200);
+}
+
+function escapeHtml(s) {
+  return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+// Grids get polled every few seconds, but the underlying clip list is
+// almost always unchanged between polls -- blindly overwriting innerHTML
+// every time was destroying/recreating every <video> (resetting playback
+// and re-fetching the thumbnail), closing any open breakdown/edit panel,
+// and wiping out an in-progress note the user was typing. Only touch the
+// DOM when the fetched data has actually changed.
+const lastGridData = {};
+function renderGridIfChanged(gridEl, clips) {
+  if (!gridEl) return;
+  if (gridEl.querySelector('.edit-panel.open') || gridEl.contains(document.activeElement)) return;
+  const key = JSON.stringify(clips);
+  if (lastGridData[gridEl.id] === key) return;
+  lastGridData[gridEl.id] = key;
+  gridEl.innerHTML = clips.map(clipCardHtml).join('');
+}
+
+let lastLibraryChannels = null;
+let latestLibraryClips = [];
+let libraryVisibleCount = 24;
+
+function changeLibraryFilter() {
+  libraryVisibleCount = 24;
+  renderLibrary(latestLibraryClips);
+}
+
+function showMoreLibrary() {
+  libraryVisibleCount += 24;
+  renderLibrary(latestLibraryClips);
+}
+
+function renderLibrary(clips) {
+  const select = document.getElementById('libraryChannelFilter');
+  const filtered = select.value ? clips.filter(c => c.channel === select.value) : clips;
+  const visible = filtered.slice(0, libraryVisibleCount);
+  const grid = document.getElementById('libraryGrid');
+  const empty = document.getElementById('libraryEmpty');
+  const pager = document.getElementById('libraryPager');
+  empty.style.display = filtered.length ? 'none' : 'block';
+  pager.style.display = filtered.length > visible.length ? 'block' : 'none';
+  document.getElementById('libraryCount').textContent = `Showing ${visible.length} of ${filtered.length} clips`;
+  renderGridIfChanged(grid, visible);
+}
+
+async function pollLibrary() {
+  const res = await fetch('/api/library/clips');
+  if (!res.ok) return;
+  const clips = await res.json();
+  latestLibraryClips = clips;
+
+  const select = document.getElementById('libraryChannelFilter');
+  const existingValue = select.value;
+  const channels = [...new Set(clips.map(c => c.channel))].sort();
+  const channelsKey = JSON.stringify(channels);
+  if (channelsKey !== lastLibraryChannels) {
+    lastLibraryChannels = channelsKey;
+    select.innerHTML = '<option value="">All channels</option>' +
+      channels.map(ch => `<option value="${ch}">${ch}</option>`).join('');
+    select.value = existingValue;
+  }
+
+  renderLibrary(clips);
+}
+
+async function pollAccount() {
+  try {
+    const res = await fetch('/api/account/summary');
+    const data = await res.json();
+    document.getElementById('creditBalance').textContent = data.balance;
+    document.getElementById('creditHeld').textContent = data.held;
+  } catch (e) { /* non-critical widget, ignore transient failures */ }
+}
+
+const pollState = { vodSignature: '', vodDelay: 10000, vodTimer: null, clipTimer: null, libraryTimer: null, accountTimer: null, vodActive: false };
+async function scheduleVodPoll() {
+  // Never let the polling loop die just because the VOD tab/page was hidden.
+  // The old early-return permanently stopped this timer chain, which meant
+  // progress only moved again after a manual refresh/tab action.
+  if (document.visibilityState === 'visible' && currentTab === 'vod') {
+    try {
+      const result = await pollVod();
+      pollState.vodActive = result.active;
+      pollState.vodDelay = result.active ? 10000 : 15000;
+    } catch (e) {
+      pollState.vodDelay = Math.min(Math.max(pollState.vodDelay * 1.5, 4000), 20000);
+    }
+  } else {
+    pollState.vodDelay = 15000;
+  }
+  clearTimeout(pollState.vodTimer);
+  pollState.vodTimer = setTimeout(scheduleVodPoll, pollState.vodDelay);
+}
+function scheduleClipPoll() {
+  if (document.visibilityState === 'visible' && currentTab === 'vod') pollVodClips().catch(() => {});
+  clearTimeout(pollState.clipTimer);
+  pollState.clipTimer = setTimeout(scheduleClipPoll, currentTab === 'vod' ? 25000 : 45000);
+}
+function scheduleLibraryPoll() {
+  if (pageActiveFor('library')) pollLibrary().catch(() => {});
+  clearTimeout(pollState.libraryTimer);
+  pollState.libraryTimer = setTimeout(scheduleLibraryPoll, pageActiveFor('library') ? 15000 : 30000);
+}
+function scheduleAccountPoll() {
+  if (document.visibilityState === 'visible' && !pollState.vodActive) pollAccount();
+  clearTimeout(pollState.accountTimer);
+  pollState.accountTimer = setTimeout(scheduleAccountPoll, (document.visibilityState === 'visible' && !pollState.vodActive) ? 30000 : 60000);
+}
+pollLive(); pollLiveClips(); pollAccount(); scheduleVodPoll(); scheduleClipPoll(); scheduleLibraryPoll(); scheduleAccountPoll();
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') {
+    if (currentTab === 'vod') { pollVod().catch(() => {}); pollVodClips().catch(() => {}); }
+    if (currentTab === 'live') { pollLive().catch(() => {}); pollLiveClips().catch(() => {}); }
+    pollAccount();
+  }
+});
+function pageActiveFor(tabName) {
+  return document.visibilityState === 'visible' && currentTab === tabName;
+}
+setInterval(() => { if (pageActiveFor('live')) pollLive(); }, 5000);
+setInterval(() => { if (pageActiveFor('live')) pollLiveClips(); }, 12000);
+</script>
+</body>
+</html>

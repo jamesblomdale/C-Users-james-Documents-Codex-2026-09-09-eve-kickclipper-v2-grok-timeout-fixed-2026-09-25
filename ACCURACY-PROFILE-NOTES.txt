@@ -1,0 +1,35 @@
+KICK CLIPPER - ACCURACY FIRST / LAPTOP BALANCED PROFILE
+
+This build is tuned for the user's 13th-gen i5-1334U / 16GB laptop while preserving VOD recall.
+
+Key choices:
+- VOD transcription: Faster-Whisper small, CPU INT8, beam 3 by default.
+- Live transcription: same model but beam 1 for lower live latency.
+- CPU thread count auto-scales to min(8, logical CPUs): 8 on i5-1334U; 6 on i5-8500.
+- Batch size remains 1 on CPU.
+- 30-second source chunks retained for stability/throughput.
+- 75-second detection windows with 20-second hops: heavy overlap so stories crossing chunk/window boundaries are still seen together.
+- Nearby candidates merge before final scoring/ranking.
+- Full VOD is still scanned before top moments are ranked.
+- One corrupt HLS/TS chunk no longer kills an entire live/VOD-stream job; it is retried through clean WAV first, then loudly logged and skipped only if both attempts fail.
+- Moment scoring no longer hard-gates everything behind negativity. Judgment/debate stays important, but funny, awkward, surprising, emotional, reveal, life-lesson, flex/status and escalation moments can also score strongly.
+- Final whole-VOD ranker prefers complete setup -> progression -> payoff and removes duplicate versions of the same story.
+- YouTube, TikTok, overlay and X packaging use separate platform-specific angles rather than copy-pasted titles.
+- X follows Hook -> Context -> optional exact Quote -> Commentary, with sensitive wording kept factual/platform-safe.
+
+Recommended .env values for the i5-1334U laptop:
+WHISPER_MODEL_SIZE=small
+WHISPER_DEVICE=cpu
+WHISPER_BATCH_SIZE=1
+WHISPER_BEAM_SIZE=3
+WHISPER_VOD_BEAM_SIZE=3
+WHISPER_LIVE_BEAM_SIZE=1
+WHISPER_CPU_THREADS=
+CHUNK_SECONDS=30
+DETECTION_WINDOW_SECONDS=75
+DETECTION_HOP_SECONDS=20
+MERGE_GAP_SECONDS=25
+
+If maximum VOD transcript accuracy matters more than processing time, test:
+WHISPER_MODEL_SIZE=medium
+Keep VOD beam at 3. Medium can be materially slower on CPU, so benchmark a 10-20 minute VOD first before using it for multi-hour streams.

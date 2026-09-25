@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Privacy Policy — kick-clipper</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/site.css">
+<link rel="stylesheet" href="/static/professional-light.css">
+</head>
+<body>
+{% include "_nav.html" %}
+
+<main>
+  <section class="page-hero" style="padding-bottom:10px;">
+    <span class="kicker">Legal</span>
+    <h1>Privacy Policy</h1>
+  </section>
+
+  <section class="section-pad" style="padding-top:20px;">
+    <div class="prose">
+      <p class="updated">Last updated: draft — replace this date when you publish, and have this reviewed before it governs real paying customers.</p>
+
+      <h2>What we collect</h2>
+      <ul>
+        <li><strong>Account data:</strong> your email address and a hashed password (we never store your password in plaintext, and we can't recover it — only reset it).</li>
+        <li><strong>Job data:</strong> the channel/VOD URL you submit, your chosen settings (threshold, aspect ratio, etc.), job status and stage history, and the clips a job produces.</li>
+        <li><strong>Billing data:</strong> if you're on a paid plan, payment is handled by Stripe directly — we receive confirmation that a payment succeeded and store credit balances, not your card number.</li>
+        <li><strong>Basic usage/technical data:</strong> standard web server logs (IP, timestamps, request paths) for security and debugging.</li>
+      </ul>
+
+      <h2>What we never collect</h2>
+      <p>We never see, store, or log your platform API keys, because there aren't any for you to provide — transcription and scoring run on credentials we hold server-side. If a "bring your own key" option is ever added, it will be encrypted at rest and never shown back to you or anyone else in plaintext after entry.</p>
+
+      <h2>How we use it</h2>
+      <p>Solely to operate the service: running your jobs, showing you your own job history and library, billing you correctly, and responding if you contact support. We don't sell your data, and we don't use your submitted video/audio content for anything beyond producing the clips you asked for.</p>
+
+      <h2>Retention</h2>
+      <p>Rendered clips are kept in your library until you delete them or your account is closed. Raw intermediate files (downloaded source video, extracted audio) are deleted automatically after processing completes, on a schedule shown in your account settings once that feature ships.</p>
+
+      <h2>Third parties</h2>
+      <p>We use third-party infrastructure to run this service: an LLM provider for transcript scoring and title generation, Stripe for payment processing, and cloud hosting/storage. Each only receives the minimum data needed to perform its function (e.g. the LLM provider sees transcript text, not your account email; Stripe sees payment details, not your video content).</p>
+
+      <h2>Your rights</h2>
+      <p>You can request a copy of your account data or request deletion of your account and associated content at any time by contacting us. Deleting your account removes your library and job history; it does not retroactively un-process anything already downloaded from your library before deletion.</p>
+
+      <h2>Contact</h2>
+      <p><em>[Placeholder — insert a real support/privacy contact address before this page goes live to real customers.]</em></p>
+    </div>
+  </section>
+</main>
+
+{% include "_footer.html" %}
+<script src="/static/site.js"></script>
+</body>
+</html>

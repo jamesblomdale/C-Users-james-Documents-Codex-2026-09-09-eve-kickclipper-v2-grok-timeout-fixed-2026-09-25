@@ -1,0 +1,59 @@
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# User data, databases, generated media and processing state
+output/
+uploads/
+instance/
+*.db
+*.sqlite*
+*.mp4
+*.mkv
+*.webm
+*.m3u8
+*.wav
+*.mp3
+*.ass
+*.srt
+
+# Python environments, caches and downloaded models
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.cache/
+.pip-tmp/
+.tools/
+.gh-config/
+.gh-cache/
+models/
+
+# Runtime logs and temporary files
+*.log
+*.part
+*.ytdl
+tmp*/
+kick-page.tmp.html
+
+# Editors and operating systems
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Archives are release artifacts, not source
+*.zip
+
+.env
+.venv/
+output/
+.asr_cache/
+__pycache__/
+*.pyc

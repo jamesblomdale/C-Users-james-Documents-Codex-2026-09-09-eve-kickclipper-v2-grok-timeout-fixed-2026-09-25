@@ -1,0 +1,17 @@
+faster-whisper==1.2.1
+streamlink==8.4.0
+opencv-python==4.10.0.84
+python-dotenv==1.2.3
+requests==2.34.2
+numpy
+flask==3.1.3
+lxml==6.1.0
+yt-dlp
+apify-client
+playwright
+sqlalchemy
+flask-sqlalchemy
+flask-login
+stripe
+
+waitress==3.0.2

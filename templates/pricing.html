@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pricing — kick-clipper</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/site.css">
+<style>
+  .plan-toggle { display: inline-flex; background: var(--surface); border: 1px solid var(--border); border-radius: 999px; padding: 4px; margin-bottom: 46px; }
+  .plan-toggle button {
+    border: none; background: none; color: var(--ink-muted); font-size: 13px; font-weight: 700;
+    padding: 8px 18px; border-radius: 999px; cursor: pointer; font-family: inherit;
+  }
+  .plan-toggle button.active { background: var(--spectrum); color: #0b0714; }
+  .plan-toggle .save-tag { font-size: 10.5px; margin-left: 6px; opacity: 0.8; }
+
+  .refund-badge {
+    display: inline-flex; align-items: center; gap: 10px; margin: 0 auto 54px; max-width: 620px;
+    background: rgba(163,230,53,0.08); border: 1px solid rgba(163,230,53,0.4); border-radius: 12px;
+    padding: 14px 20px; font-size: 13.5px; color: var(--ink); text-align: left;
+  }
+  .refund-badge svg { width: 22px; height: 22px; color: var(--lime); flex-shrink: 0; }
+  .refund-badge b { color: var(--lime); }
+
+  .plan-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; align-items: stretch; }
+  @media (max-width: 1000px) { .plan-grid { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 620px) { .plan-grid { grid-template-columns: 1fr; } }
+  .plan-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
+    padding: 26px 22px; display: flex; flex-direction: column; position: relative;
+  }
+  .plan-card.featured { border-color: var(--cyan); background: linear-gradient(180deg, rgba(34,211,238,0.07), var(--surface)); box-shadow: 0 0 0 1px var(--cyan); }
+  .plan-tag {
+    position: absolute; top: -12px; left: 22px; background: var(--spectrum); color: #0b0714;
+    font-size: 10px; font-weight: 800; letter-spacing: 0.04em; padding: 4px 10px; border-radius: 999px;
+  }
+  .plan-name { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+  .plan-desc { font-size: 12.5px; color: var(--ink-muted); margin-bottom: 18px; min-height: 32px; }
+  .plan-price { font-family: "IBM Plex Mono", monospace; font-size: 30px; font-weight: 600; }
+  .plan-price span { font-size: 13px; color: var(--ink-dim); font-family: "Inter", sans-serif; }
+  .plan-credits { font-size: 12.5px; color: var(--cyan); font-weight: 700; margin: 6px 0 20px; }
+  .plan-list { list-style: none; margin: 0 0 22px; padding: 0; display: flex; flex-direction: column; gap: 9px; flex: 1; }
+  .plan-list li { display: flex; gap: 8px; font-size: 12.5px; color: var(--ink-muted); }
+  .plan-list svg { width: 14px; height: 14px; color: var(--lime); flex-shrink: 0; margin-top: 2px; }
+  .plan-card .btn { justify-content: center; width: 100%; }
+
+  .topup-row { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; }
+  .topup-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px 26px; text-align: center; min-width: 160px; }
+  .topup-credits { font-family: "IBM Plex Mono", monospace; font-size: 20px; font-weight: 700; color: var(--cyan); }
+  .topup-price { font-size: 13px; color: var(--ink-muted); margin-top: 4px; }
+</style>
+<link rel="stylesheet" href="/static/professional-light.css">
+</head>
+<body>
+{% include "_nav.html" %}
+
+<main>
+  <section class="page-hero">
+    <span class="kicker">Pricing</span>
+    <h1>One credit pool.<br>Pay for footage that actually got processed.</h1>
+    <p>1 credit = 1 minute of source video actually run through the pipeline. VOD and live share the same pool — live costs more per minute since it holds a worker for the whole session.</p>
+  </section>
+
+  <section class="section-pad" style="padding-top:0;">
+    <div class="wrap" style="text-align:center;">
+      <div class="refund-badge reveal in">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/></svg>
+        <span><b>An empty VOD never costs you.</b> If a full scan finds zero keepable clips, the credits for that job are returned to your balance automatically — no ticket, no waiting.</span>
+      </div>
+
+      <div class="plan-toggle reveal in" id="planToggle">
+        <button type="button" class="active" data-cycle="monthly">Monthly</button>
+        <button type="button" data-cycle="annual">Annual <span class="save-tag">save 20%</span></button>
+      </div>
+
+      <div class="plan-grid reveal in">
+        <div class="plan-card">
+          <div class="plan-name">Free</div>
+          <div class="plan-desc">Try it once, no card needed.</div>
+          <div class="plan-price">$0</div>
+          <div class="plan-credits">90 credits, one-time (~1.5h VOD)</div>
+          <ul class="plan-list">
+            <li><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg> 1 job at a time</li>
+            <li><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg> All presets + full editor</li>
+            <li><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg> Watermarked exports</li>
+          </ul>
+          <a class="btn btn-ghost" href="/signup">Start free</a>
+        </div>
+
+        <div class="plan-card">
+          <div class="plan-name">Starter</div>
+          <div class="plan-desc">One solo clipper, one channel.</div>
+          <div class="plan-price"><span class="price-m">$15</span><span> /mo</span></div>
+          <div class="plan-credits">900 credits/mo (~15h VOD)</div>
+          <ul class="plan-list">
+            <li><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg> 2 concurrent jobs</li>
+            <li><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg> No watermark</li>
+            <li><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg> Unused credits roll within period</li>
+          </ul>
+          <a class="btn btn-ghost" href="/signup">Start free</a>
+        </div>
+
+        <div class="plan-card featured">
+          <span class="plan-tag">MOST CLIPPERS</span>
+          <div class="plan-name">Growth</div>
+          <div class="plan-desc">Daily clipping, one main creator.</div>
+          <div class="plan-price"><span class="price-m">$39</span><span> /mo</span></div>
+          <div class="plan-credits">1,440 credits/mo (~24h VOD)</div>
+          <ul class="plan-list">
+            <li><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg> 3 concurrent jobs</li>
+            <li><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg> 1 connected account (autopilot, soon)</li>
+            <li><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg> No watermark</li>
+          </ul>
+          <a class="btn btn-primary" href="/signup">Start free</a>
+        </div>
+
+        <div class="plan-card">
+          <div class="plan-name">Pro</div>
+          <div class="plan-desc">Multiple accounts / a small team.</div>
+          <div class="plan-price"><span class="price-m">$99</span><span> /mo</span></div>
+          <div class="plan-credits">2,700 credits/mo (~45h VOD)</div>
+          <ul class="plan-list">
+            <li><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg> 8 concurrent jobs</li>
+            <li><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg> Several connected creators</li>
+            <li><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg> Priority queue</li>
+          </ul>
+          <a class="btn btn-ghost" href="/signup">Start free</a>
+        </div>
+      </div>
+
+      {% if not stripe_enabled %}
+      <p class="reveal in" style="margin:26px auto 0; color:var(--ink-dim); font-size:13px;">
+        Card checkout isn't live yet — sign up and you'll be on the Free plan's credits for now. Every account and every job already runs through the real credit ledger above.
+      </p>
+      {% endif %}
+    </div>
+  </section>
+
+  <section class="section-pad">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <div class="kicker">Need more, once</div>
+        <h2>Top-up packs</h2>
+        <p>On any paid plan, buy extra credits any time — they never expire mid-period.</p>
+      </div>
+      <div class="topup-row reveal">
+        <div class="topup-card"><div class="topup-credits">500</div><div class="topup-price">$8</div></div>
+        <div class="topup-card"><div class="topup-credits">1,500</div><div class="topup-price">$20</div></div>
+        <div class="topup-card"><div class="topup-credits">5,000</div><div class="topup-price">$60</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section-pad" style="background:linear-gradient(180deg, transparent, rgba(124,58,237,0.04), transparent);">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <div class="kicker">Teams</div>
+        <h2>Need more seats or a custom limit?</h2>
+        <p>Custom plans exist for clipping teams that outgrow Pro — negotiated credits, concurrency, and creators.</p>
+      </div>
+      <div style="text-align:center;"><a class="btn btn-ghost reveal" href="mailto:hello@kick-clipper.example">Talk to us</a></div>
+    </div>
+  </section>
+</main>
+
+{% include "_footer.html" %}
+<script src="/static/site.js"></script>
+<script>
+(function () {
+  var toggle = document.getElementById('planToggle');
+  if (!toggle) return;
+  var prices = { monthly: [15, 39, 99], annual: [12, 31, 79] };
+  toggle.addEventListener('click', function (e) {
+    var btn = e.target.closest('button[data-cycle]');
+    if (!btn) return;
+    toggle.querySelectorAll('button').forEach(function (b) { b.classList.toggle('active', b === btn); });
+    var cycle = btn.dataset.cycle;
+    var els = document.querySelectorAll('.price-m');
+    var vals = prices[cycle];
+    els.forEach(function (el, i) { el.textContent = '$' + vals[i]; });
+  });
+})();
+</script>
+</body>
+</html>

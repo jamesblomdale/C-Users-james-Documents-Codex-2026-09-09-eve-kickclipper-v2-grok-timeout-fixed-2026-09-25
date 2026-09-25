@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Terms of Service — kick-clipper</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/site.css">
+<link rel="stylesheet" href="/static/professional-light.css">
+</head>
+<body>
+{% include "_nav.html" %}
+
+<main>
+  <section class="page-hero" style="padding-bottom:10px;">
+    <span class="kicker">Legal</span>
+    <h1>Terms of Service</h1>
+  </section>
+
+  <section class="section-pad" style="padding-top:20px;">
+    <div class="prose">
+      <p class="updated">Last updated: draft — replace this date when you publish, and have this reviewed by a lawyer licensed where you operate before it governs real paying customers.</p>
+
+      <h2>1. What this is</h2>
+      <p>kick-clipper ("the service") accepts a Kick channel, Kick VOD URL, or (where enabled) another supported source, and automatically produces short vertical video clips with captions, scoring, and suggested titles. It does not host, promote, or distribute your clips anywhere — you download them and decide what to do next.</p>
+
+      <h2>2. Content rights are yours to have, not ours to grant</h2>
+      <p>You may only submit content you have the right to process — the streamer's own footage rules, Kick's Terms of Service, and any campaign or brand agreement you're operating under are your responsibility, not something this service verifies or guarantees on your behalf. Do not submit content you don't have the right to use.</p>
+      <p>You grant us a limited license to your submitted source — solely to download, transcribe, analyze, cut, render, caption, and store it as needed to run the job you started and deliver you the resulting clips. We don't use your source content for any other purpose, and we don't claim ownership of your clips.</p>
+
+      <h2>3. You're responsible for what you publish</h2>
+      <p>You are solely responsible for any clip you download from this service and post elsewhere — the platform you post to, the streamer whose content it is, and anyone else with a claim on it. We are not a party to that decision.</p>
+
+      <h2>4. Credits, billing, and refunds</h2>
+      <ul>
+        <li>Credits are consumed as source footage is actually processed by a job (1 credit ≈ 1 processed source minute; live sessions are priced higher per minute than VOD — see the Pricing page for current rates).</li>
+        <li>If a job completes a full analysis pass and produces zero keepable clips, the credits held for that job are returned to your balance automatically.</li>
+        <li>If a job fails due to a fault in our own pipeline (source resolution, our LLM provider, our rendering pipeline), the held credits are returned automatically.</li>
+        <li>If a job fails due to something about your input that isn't recoverable after retries (a private VOD, a region-blocked stream, an unusable URL), the held credits are returned and the reason is shown to you.</li>
+        <li>If a job produces at least one usable clip before a later failure, the credits for that job are captured (not refunded) and the successful clips remain in your library — see the Pricing page for exactly how this is calculated.</li>
+        <li>Subscription credits reset each billing period and do not carry over unless stated otherwise on the Pricing page at the time of your purchase. Purchased top-up credits do not expire mid-subscription.</li>
+        <li>Cancel anytime; remaining subscription credits remain usable through the end of the period you already paid for.</li>
+      </ul>
+
+      <h2>5. Copyright &amp; takedown</h2>
+      <p>If you believe content processed or displayed through this service infringes your copyright, contact us with the specific URL/job in question and a description of the claim, and we will investigate and remove access where warranted. We reserve the right to remove any content or suspend any account in response to a credible claim.</p>
+
+      <h2>6. Platform API keys</h2>
+      <p>Transcription and scoring are performed using credentials we hold server-side. You never see, set, or have access to these credentials through the customer dashboard. If a future "bring your own key" option is offered, it will be clearly opt-in and stored encrypted, never shown to us or anyone else in plaintext after entry.</p>
+
+      <h2>7. Acceptable use</h2>
+      <p>Don't scrape, reverse-engineer, or resell access to this service; don't attempt to overload shared processing capacity; don't use the service to process content designed to harass, exploit minors, or violate law. We may suspend or terminate accounts for abuse without a full refund of unused subscription credits earned through abuse of the free trial specifically, though paid balances follow the refund terms above.</p>
+
+      <h2>8. No guarantee against platform bans</h2>
+      <p>We do not and cannot guarantee that content you post to any third-party platform (TikTok, YouTube, Instagram, X, or any other) will avoid moderation, suspension, or a ban of your account there. Any pacing or scheduling features we offer for automated posting are a risk-reduction measure, not a guarantee.</p>
+
+      <h2>9. Limitation of liability</h2>
+      <p>To the maximum extent permitted by law, our total liability to you for any claim arising from your use of this service is limited to the amount you paid us in the 3 months prior to the claim. We are not liable for indirect, incidental, or consequential damages, including lost profits or lost content.</p>
+
+      <h2>10. Changes</h2>
+      <p>We may update these terms as the service changes. Material changes will be reflected by an updated "last updated" date above; continued use after a change means you accept the update.</p>
+
+      <h2>11. Governing law</h2>
+      <p><em>[Placeholder — the owner should insert their actual governing jurisdiction here before this page goes live to real customers.]</em></p>
+    </div>
+  </section>
+</main>
+
+{% include "_footer.html" %}
+<script src="/static/site.js"></script>
+</body>
+</html>

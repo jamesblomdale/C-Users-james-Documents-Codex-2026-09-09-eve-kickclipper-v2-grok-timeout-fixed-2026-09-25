@@ -1,0 +1,54 @@
+KICK CLIPPER — SETUP ON ANOTHER WINDOWS COMPUTER
+
+The current source is also available at:
+https://github.com/jamesblomdale/James
+
+For the shortest GitHub setup, follow GITHUB-SETUP-OTHER-PC.md. The ZIP/extract
+instructions below remain valid for an offline transfer.
+
+1. Extract the ZIP completely to a short local path such as C:\kick-clipper.
+   Do not run the application from inside the ZIP.
+
+2. The computer needs Python 3.12, FFmpeg on PATH, and the Microsoft Visual
+   C++ 2015–2022 x64 Redistributable. GPU transcription additionally requires
+   compatible NVIDIA CUDA/cuDNN libraries. CPU mode works without a GPU.
+
+3. Run Setup.cmd. It creates a Python environment, installs the required
+   packages and browser, and copies .env.example to .env if needed.
+   Internet access is needed for setup and the first transcription-model download.
+
+4. Open .env in a text editor. Set these before the first launch:
+     LLM_PROVIDER=openai
+     OPENAI_API_KEY=your OpenAI API key
+   Or use LLM_PROVIDER=grok with GROK_API_KEY instead.
+     OWNER_EMAIL=your chosen login email
+     OWNER_PASSWORD=your own strong password
+     SECRET_KEY=a long random secret
+   Keep these values private. You can generate a random SECRET_KEY in CMD:
+     venv\Scripts\python.exe -c "import secrets; print(secrets.token_urlsafe(48))"
+   Paste the result after SECRET_KEY= in .env and save the file.
+
+5. Run Start.cmd and open http://127.0.0.1:5059/dashboard.
+   Sign in using the OWNER_EMAIL and OWNER_PASSWORD you configured.
+   Keep the CMD window open while using the app. Ctrl+C stops the app.
+
+Use Setup.cmd for a NEW computer. Install-Upgrade.cmd targets the original
+computer's existing C:\Users\james\kick-clipper installation; do not use it
+for a fresh installation on a different computer.
+
+WHAT IS INCLUDED
+The updated application, templates, 3D assets, bundled faster-whisper code,
+log monitor, editor/overlay/deletion changes, scoring policy, optional frame
+review, benchmark tool, tests and setup scripts.
+
+WHAT IS NOT INCLUDED
+Your private API keys/passwords, account database, existing VODs/clips,
+Python environment, GPU drivers or downloaded speech-model weights.
+For existing clips, separately transfer your output folder. Saved editor
+recipes may refer to original absolute source paths; retain or update those
+paths on the new computer before re-editing old clips.
+
+Read UPGRADE-NOTES.md for the changes, research, tests and remaining limits.
+For WSL/Ubuntu, read TRANSFER-SETUP.md or run: bash setup-wsl.sh
+The eight-hour/30-minute target depends on hardware and has not been achieved
+in the CPU benchmark. Provider credits must be available for AI scoring.

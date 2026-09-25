@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How it works — kick-clipper</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/site.css">
+<style>
+  .big-steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
+  @media (max-width: 860px) { .big-steps { grid-template-columns: 1fr; } }
+  .big-step { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 30px 26px; }
+  .big-step .num { font-family: "IBM Plex Mono", monospace; font-size: 13px; color: var(--cyan); margin-bottom: 14px; }
+  .big-step h3 { font-size: 20px; margin: 0 0 10px; }
+  .big-step p { color: var(--ink-muted); font-size: 14.5px; margin: 0; }
+
+  .stage-rail { max-width: 720px; margin: 0 auto; }
+  .stage-row {
+    display: flex; align-items: center; gap: 16px; padding: 14px 18px;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 10px;
+  }
+  .stage-row .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--border-soft); flex-shrink: 0; }
+  .stage-row.done .dot { background: var(--lime); box-shadow: 0 0 8px var(--lime); }
+  .stage-row .name { font-family: "IBM Plex Mono", monospace; font-size: 13px; color: var(--ink); min-width: 190px; }
+  .stage-row .desc { font-size: 13px; color: var(--ink-muted); }
+
+  .outcome-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  @media (max-width: 900px) { .outcome-grid { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 560px) { .outcome-grid { grid-template-columns: 1fr; } }
+  .outcome-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+  .outcome-card .tag { font-family: "IBM Plex Mono", monospace; font-size: 11.5px; font-weight: 700; padding: 3px 9px; border-radius: 6px; display: inline-block; margin-bottom: 12px; }
+  .tag-good { background: rgba(163,230,53,0.15); color: var(--lime); }
+  .tag-refund { background: rgba(34,211,238,0.15); color: var(--cyan); }
+  .tag-fail { background: rgba(255,79,154,0.15); color: var(--pink); }
+  .outcome-card p { font-size: 13px; color: var(--ink-muted); margin: 0; }
+</style>
+<link rel="stylesheet" href="/static/professional-light.css">
+</head>
+<body>
+{% include "_nav.html" %}
+
+<main>
+  <section class="page-hero">
+    <span class="kicker">How it works</span>
+    <h1>Point it → We watch the whole thing → Clips land in your library.</h1>
+    <p>No manual downloading, no hunting for a stream URL, no guessing whether a job actually finished. Every job is a tracked pipeline with a real, honest status.</p>
+  </section>
+
+  <section class="section-pad" style="padding-top:0;">
+    <div class="wrap">
+      <div class="big-steps">
+        <div class="big-step reveal in">
+          <div class="num">01</div>
+          <h3>Point it at a Kick channel or VOD</h3>
+          <p>Paste <span class="mono">kick.com/username</span> or a VOD link — that's it. We resolve the real playback source server-side; you never touch a CloudFront manifest URL.</p>
+        </div>
+        <div class="big-step reveal in">
+          <div class="num">02</div>
+          <h3>Search the transcript, inspect the shortlist</h3>
+          <p>For supported stream sources, audio is pulled first and transcribed locally. Overlapping transcript windows locate candidates. A bounded context review checks the strongest moments before final ranking; optional video review inspects those sections. Silent events outside the shortlist can still be missed.</p>
+        </div>
+        <div class="big-step reveal in">
+          <div class="num">03</div>
+          <h3>Clips land in your library</h3>
+          <p>Captioned, face-cropped, scored, with a suggested title and a "why this clip" reason — ready to download. Nothing is marked done until it's actually sitting in your library.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section-pad" style="background:linear-gradient(180deg, transparent, rgba(124,58,237,0.04), transparent);">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <div class="kicker">The actual pipeline</div>
+        <h2>Every job is a tracked state machine, not a black box</h2>
+        <p>This is the real stage list a job moves through — the same one the dashboard shows you live.</p>
+      </div>
+      <div class="stage-rail">
+        <div class="stage-row done reveal"><span class="dot"></span><span class="name">queued</span><span class="desc">Waiting for a worker slot.</span></div>
+        <div class="stage-row done reveal"><span class="dot"></span><span class="name">resolving_source</span><span class="desc">Turning your URL into a real playback source, server-side.</span></div>
+        <div class="stage-row done reveal"><span class="dot"></span><span class="name">audio_pull</span><span class="desc">Pulling audio only — video comes later, only for kept clips.</span></div>
+        <div class="stage-row done reveal"><span class="dot"></span><span class="name">transcribing</span><span class="desc">Local speech-to-text, word-level timestamps.</span></div>
+        <div class="stage-row done reveal"><span class="dot"></span><span class="name">scoring</span><span class="desc">Every window judged by the LLM against your threshold.</span></div>
+        <div class="stage-row done reveal"><span class="dot"></span><span class="name">rendering</span><span class="desc">Crop, face-track, burn in captions, encode — only for clips that cleared the bar.</span></div>
+        <div class="stage-row done reveal"><span class="dot"></span><span class="name">indexing_library</span><span class="desc">Clips are counted into your library from the database, not a log line.</span></div>
+        <div class="stage-row done reveal"><span class="dot"></span><span class="name">settling_credits</span><span class="desc">Hold is captured or refunded based on what actually happened.</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section-pad">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <div class="kicker">Every possible outcome, handled honestly</div>
+        <h2>A job never lies about what it did</h2>
+      </div>
+      <div class="outcome-grid">
+        <div class="outcome-card reveal">
+          <span class="tag tag-good">completed</span>
+          <p>At least one clip cleared your threshold. Credits for the source minutes are captured; clips are in your library.</p>
+        </div>
+        <div class="outcome-card reveal">
+          <span class="tag tag-refund">completed_empty</span>
+          <p>The full stream was scanned, nothing cleared the bar. Credits are returned automatically — this is the "empty VOD never costs you" promise.</p>
+        </div>
+        <div class="outcome-card reveal">
+          <span class="tag tag-refund">failed</span>
+          <p>Something on our end broke (source resolve, LLM, encoder). Credits are returned in full and the reason is shown to you.</p>
+        </div>
+        <div class="outcome-card reveal">
+          <span class="tag tag-good">partial</span>
+          <p>Some clips finished before a later failure. Those clips stay in your library; credits are settled for the work actually done.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="closing reveal" style="text-align:center; padding:100px 32px 120px;">
+    <div class="kicker" style="justify-content:center; display:flex;">Ready when you are</div>
+    <h2 style="font-size:clamp(28px,4vw,40px); margin-bottom:16px;">See it on a real VOD.</h2>
+    <p style="color:var(--ink-muted); margin:0 auto 30px;">Free credits, no card. Paste a link and watch the stages move.</p>
+    <a class="btn btn-primary" href="/signup">Start free</a>
+  </section>
+</main>
+
+{% include "_footer.html" %}
+<script src="/static/site.js"></script>
+</body>
+</html>

@@ -1,0 +1,24 @@
+PowerShell:
+
+1. Extract this ZIP. Open PowerShell in the folder containing `Setup.ps1`.
+2. Install prerequisites if needed:
+
+   winget install --id Python.Python.3.12 -e
+   winget install --id Gyan.FFmpeg -e
+
+3. Run:
+
+   powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Setup.ps1
+   notepad .env
+
+4. Add your provider keys, OWNER_EMAIL, and OWNER_PASSWORD to `.env`, save it, then run:
+
+   powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Start.ps1
+
+WSL Ubuntu:
+
+   bash setup-wsl.sh
+   nano .env
+   bash start-wsl.sh
+
+Open http://127.0.0.1:5059/dashboard. Run only one installation on port 5059.

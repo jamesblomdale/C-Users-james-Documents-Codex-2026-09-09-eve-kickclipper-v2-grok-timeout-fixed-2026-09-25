@@ -1,0 +1,24 @@
+:root { --bg:#f7f8fa; --surface:#ffffff; --surface2:#f2f4f7; --border:#dfe3e8; --accent:#2563eb; --accent2:#4f46e5; --lime:#0f766e; --text:#171a1f; --muted:#667085; }
+:root { --ink:#171a1f; --ink-muted:#667085; --violet:#4f46e5; --cyan:#2563eb; --spectrum:#171a1f; }
+.hero h1 { letter-spacing:-.05em!important; }
+@media(min-width:1000px){.hero{text-align:left!important;padding-left:max(6vw,32px)!important;min-height:690px}.hero h1{max-width:680px}.hero-sub{margin-left:0!important;max-width:520px!important}.hero-actions,.badge-row{justify-content:flex-start!important}.hero-3d{left:79%!important;top:44%!important;width:750px!important;height:750px!important}.hero .terminal{margin-left:0!important}}
+body { background:radial-gradient(ellipse at 82% 0%,#29144580,transparent 48%),#08070e!important; color:#f6f2ff; }
+.panel,.job-card,.clip-card { background:linear-gradient(145deg,#1e1829,#100d18 65%)!important; border:1px solid #3b2d4c!important; box-shadow:inset 0 1px 0 #ffffff0d,0 14px 40px #0006!important; border-radius:18px!important; }
+.panel::before,.clip-card::before { background:linear-gradient(90deg,transparent,#9d66ed,transparent)!important; }
+.sidebar { background:#0c0913ef!important; border-right:1px solid #2b2139!important; }
+.btn-primary { background:linear-gradient(135deg,#b581ff,#7545de)!important; color:white!important; border:1px solid #c798ff!important; box-shadow:inset 0 1px 0 #ffffff55,0 4px 0 #492688,0 8px 20px #6c30b944; }
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible { outline:2px solid #d5baff; outline-offset:4px; }
+.studio-banner { margin-bottom:26px; padding:36px; min-height:190px; position:relative; overflow:hidden; border:1px solid #493060; border-radius:24px; background:radial-gradient(ellipse at right,#7733c960,transparent 65%),#0c0915; perspective:900px; }
+.studio-banner h1 { font-size:clamp(30px,4vw,54px); letter-spacing:-2px; line-height:1.06; margin:12px 0; max-width:620px; }
+.studio-banner p { color:#bfb1d0; max-width:580px; }
+.studio-banner small { color:#c59aff; letter-spacing:3px; }
+.studio-depth { position:absolute; right:30px; top:35px; width:200px; transform:rotateY(-28deg) rotateZ(10deg); background:linear-gradient(130deg,#614484,#130e21); padding:20px; border:1px solid #b886ff70; border-radius:15px; box-shadow:18px 20px 0 #160c26,20px 22px 0 #573278,35px 40px 65px #8031dd55; opacity:.8; }
+.studio-depth i { display:block;height:7px;margin:14px 0;background:linear-gradient(90deg,#c393ff,#714cb0);border-radius:4px; }
+.guardian { margin-top:12px; padding:13px; background:#0b1014; border:1px solid #263d3b; border-radius:12px; font-size:12px; }
+.guardian strong { color:#a1e9cd; }.guardian details {margin-top:9px;color:#ead5c4}.guardian p{margin:6px 0}.guardian .error {border-left:2px solid #ed8e92;padding-left:9px}
+.progress-wrap { padding:18px; background:#0b0913; border:1px solid #30203e; border-radius:12px; }
+.progress-bar-bg {height:10px!important}.progress-bar-fill{background:linear-gradient(90deg,#7644d5,#d0a6ff)!important;box-shadow:0 0 16px #b87dff80}
+.edit-toggle {background:transparent;border:0;text-align:left;padding:8px 0}.edit-panel{padding:18px!important;border-radius:14px!important}
+.clip-actions{flex-wrap:wrap}.clip-card:hover{transform:perspective(1000px) translateY(-3px)!important}
+@media(max-width:1000px){.studio-depth{display:none}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}.clip-card:hover{transform:none!important}}

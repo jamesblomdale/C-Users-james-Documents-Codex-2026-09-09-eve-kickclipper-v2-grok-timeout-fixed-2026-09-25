@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Log in — kick-clipper</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/site.css">
+<link rel="stylesheet" href="/static/professional-light.css">
+</head>
+<body>
+{% include "_nav.html" %}
+
+<main>
+  <section class="page-hero" style="padding-bottom:30px;">
+    <span class="kicker">Welcome back</span>
+    <h1>Log in</h1>
+  </section>
+  <section style="padding: 0 32px 100px;">
+    <div class="form-shell panel">
+      {% with messages = get_flashed_messages() %}
+        {% if messages %}<div class="form-flash">{{ messages[0] }}</div>{% endif %}
+      {% endwith %}
+      <form method="post" action="/login">
+        <div class="form-field">
+          <label for="email">Email</label>
+          <input type="email" id="email" name="email" required autofocus>
+        </div>
+        <div class="form-field">
+          <label for="password">Password</label>
+          <input type="password" id="password" name="password" required>
+        </div>
+        <button type="submit" class="btn btn-primary form-submit">Log in</button>
+      </form>
+      <div class="form-switch">No account yet? <a href="/signup">Start free</a></div>
+    </div>
+  </section>
+</main>
+
+{% include "_footer.html" %}
+<script src="/static/site.js"></script>
+</body>
+</html>

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Start free — kick-clipper</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/site.css">
+<link rel="stylesheet" href="/static/professional-light.css">
+</head>
+<body>
+{% include "_nav.html" %}
+
+<main>
+  <section class="page-hero" style="padding-bottom:30px;">
+    <span class="kicker">Free, no card</span>
+    <h1>Start free</h1>
+    <p>A one-time batch of credits to run a real VOD through the full pipeline.</p>
+  </section>
+  <section style="padding: 0 32px 100px;">
+    <div class="form-shell panel">
+      {% with messages = get_flashed_messages() %}
+        {% if messages %}<div class="form-flash">{{ messages[0] }}</div>{% endif %}
+      {% endwith %}
+      <form method="post" action="/signup">
+        <div class="form-field">
+          <label for="email">Email</label>
+          <input type="email" id="email" name="email" required autofocus>
+        </div>
+        <div class="form-field">
+          <label for="password">Password</label>
+          <input type="password" id="password" name="password" minlength="8" required>
+        </div>
+        <button type="submit" class="btn btn-primary form-submit">Create account</button>
+      </form>
+      <div class="form-switch">Already have an account? <a href="/login">Log in</a></div>
+    </div>
+  </section>
+</main>
+
+{% include "_footer.html" %}
+<script src="/static/site.js"></script>
+</body>
+</html>

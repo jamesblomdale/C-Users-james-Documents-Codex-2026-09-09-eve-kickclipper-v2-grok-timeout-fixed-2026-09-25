@@ -1,0 +1,42 @@
+You are refining the KickClipper codebase. Audit the ENTIRE repository before editing. Preserve working behavior and tests; benchmark changes rather than assuming more concurrency is faster.
+
+GOALS IN PRIORITY ORDER:
+1) Find the best viral moments from long Kick/Twitch/YouTube/IRL VODs with very high recall, especially moments other clipping pages actually post. A miss before scoring is the worst failure.
+2) Make 2-12+ hour VOD processing as fast and reliable as practical: rolling audio-only HLS ingest, producer/consumer backpressure, ASR begins as soon as the first window exists, bounded adaptive concurrency, resume/checkpoints, no full-VOD re-encode, render winners only.
+3) Never trade reliability for a fake concurrency number. Distinguish HLS fragment concurrency from cloud-ASR concurrency. Probe provider capacity and adapt on 429/5xx/ConnectionError with jitter/backoff.
+
+MOMENT FINDING:
+- Keep loose scout -> hard score -> merge story -> protect peaks -> context/visual verify -> rank VOD. Scout threshold 32, export 60, peak lock 65, no-payoff cap 49 unless tests/research justify a migration.
+- First-class classes: IRL_ACTION, IRL_REACTION, QUOTE, CONFRONTATION, REVEAL, COMEDY, FLEX_FAIL, HEART, STATUS, CHAOS. Hunt public roast/humiliation; lie->catch; money ignored/thrown/denied; fight/hop-out/almost-fight; streamer-vs-streamer; IRL danger/GTA; playback cringe; soft moment->crash; authority/security; location flips; silence-after-X; reaction-only.
+- Add cheap non-text finders before deep scoring: audio energy/change, silence after peak/line, location/audio-scene flip, chat intent when available, and sparse 6-12 frame sampling around suspicious peaks. Thin speech must not mean no candidate.
+- Implement recap killer: same judgment_target/topic/quote-stem later in VOD is lower priority unless it adds a confession/new fact.
+- Add <=8-word overlay/action test and specific-stranger-comment test. Famous names without actions are not hooks.
+- Keep IRL cuts tight: 18-55s default; 56-70s only with an extra named beat. Talk >110s cannot be 8-star by default. Break merges on location flip unless the flip is the payoff.
+- Cold-open rewrite: if hook is >8s after start, propose a tighter start and RE-SCORE the new cut; do not reward a late hook.
+
+GROUND-TRUTH / COMPETITOR ORACLE:
+- Build an OPTIONAL, cached oracle that compares our candidates with human clips from the same broadcast when legally/technically available. Twitch: official Get Clips by broadcaster/date and map clip vod_offset/video_id where available. Kick: isolate unofficial/private-web clip endpoints behind an adapter because they can change; never make core processing depend on them. X/social: only use supported APIs or user-provided data; do not scrape in a brittle/ToS-violating way.
+- Cluster human clip offsets; 4+ clips around the same ~20s is strong evidence. If no candidate overlaps ±15s, record SCOUT_MISS and optionally force-insert a narrow candidate around the cluster median for scoring. If humans use ~28s and ours is 140s, record CUT_MISS. Store misses as evaluation gold, not as automatic truth.
+- Multi-cam: where multiple VODs from the same event/night are supplied, align by wall-clock and let the ranker select the angle with the clearest visible action/reaction.
+
+RATING / WEBSITE:
+- Keep internal 0-100 but expose Moment score and Cut score separately. Final display score = 0.65*Moment + 0.35*Cut, then hard gates.
+- Gates: payoff missing/outside [start+2,end-2] => cap 49/max 5-star; IRL tightness<60 or talk<55 => cannot be 8-star; IRL >70s (unless justified confrontation with new info) => cannot be 8-star; talk>110s => cannot be 8-star; hook not in first 3-8s => cannot be 8-star; duplicate story => keep tighter version. Verify title quotes are literal substrings of exported clip.
+- Cut score should penalize dead lead, dead tail, late hook, missing payoff, waste ratio, duration outside class band. Show class, hook/payoff, Moment/Cut, dead lead and suggested trim on cards. 8-star should mean genuinely postable tonight, not merely an interesting event.
+- Add thumbnail/pause-frame selection from 6-10 frames around peak; prefer face/reaction/action/money/crowd/door-deny frames. Lack of a strong frame can reduce Cut, not erase a real Moment.
+
+LONG-VOD SPEED / RAG:
+- Use temporal hierarchical retrieval, not one giant transcript prompt: timestamped child windows -> cheap scout/retrieval -> expand parent context -> deep score survivors -> merge/re-score -> vision top-K. Preserve exact timestamps and event links. Do not add heavyweight GraphRAG unless benchmarks show it improves recall enough to justify latency.
+- Implement rolling HLS/audio producer-consumer architecture. Prefer audio-only/lowest audio-capable rendition. Fetch segments concurrently with bounded queue. As soon as ~3-4 minutes are ready, create compressed mono ASR window and submit it while later HLS segments continue downloading. No wait-for-100%-download barrier.
+- ASR baseline: Parakeet offline model, ~240s windows, ~15s overlap, VAD/silence-aware seam when practical, compressed AAC/Opus rather than WAV, timestamps, checkpoint every completed chunk. Failed chunk can split to ~90s retry.
+- Start ASR concurrency at the proven account limit (currently 8). Add capability probing/adaptive controller only if provider permits >8: increase slowly, reduce on 429/connection/latency degradation. Never hard-code 16 just because a blog suggests it. HLS fragment concurrency can be separately 8-12 and adapt downward on CDN/network errors.
+- Scout each completed ASR chunk immediately. Deep score only survivors. Vision only top candidates. Render only final winners from source HLS.
+- Add stage/per-chunk metrics: download throughput, queue depth, chunk prep, upload, ASR latency p50/p95, retries by reason, scout/deep/vision/render times, total wall time, time-to-first-transcript, time-to-first-candidate. Use these to locate bottlenecks.
+
+RELIABILITY:
+- Idempotent checkpoints and resume for HLS segments, ASR chunks, transcript, scout shortlist, deep scores and rendered clips. Atomic writes. Bounded queues/backpressure. Connection pooling but recreate poisoned sessions after network failures. Jittered exponential backoff; respect Retry-After. Never retry permanent 4xx blindly.
+- Core VOD completion must not depend on competitor APIs, chat replay, vision provider, or social search. Optional enrichers fail open with clear logs.
+- Audit DB migrations/schema, stale env defaults, duplicate config definitions, serial loops, unnecessary ffmpeg transcodes, N+1 model calls, excessive dashboard polling and unbounded executors.
+- Add regression tests for candidate recall, payoff gates, cut gates, duplicate suppression, oracle miss detection, retry behavior, resume, and concurrency ceilings.
+
+Before changing code, map the current pipeline file-by-file and identify the actual bottlenecks. Then implement in small commits/patches, run tests/compile checks, and produce a PERFORMANCE_AND_RECALL_AUDIT.md with before/after architecture, settings, known limitations, benchmark commands and any external endpoints that are unofficial/fragile. Do not claim a speedup without a measurable benchmark. Do not weaken moment detection merely to make processing faster.

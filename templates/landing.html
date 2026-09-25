@@ -1,0 +1,1113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>kick-clipper</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f7f8fa;
+    --surface: #ffffff;
+    --surface-2: #f2f4f7;
+    --border: #dfe3e8;
+    --border-soft: #edf0f3;
+    --ink: #171a1f;
+    --ink-muted: #596273;
+    --ink-dim: #7b8493;
+    --violet: #4f46e5;
+    --cyan: #2563eb;
+    --pink: #7c3aed;
+    --lime: #0f766e;
+    --spectrum: #171a1f;
+  }
+
+  * { box-sizing: border-box; }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Inter", -apple-system, "Segoe UI", sans-serif;
+    line-height: 1.5;
+    overflow-x: hidden;
+  }
+
+  h1, h2, h3, .brand-word, .step-title, .frame-title, .tier-name {
+    font-family: "Space Grotesk", "Inter", sans-serif;
+  }
+
+  .mono { font-family: "IBM Plex Mono", "SF Mono", Consolas, monospace; }
+
+  h2 { text-wrap: balance; }
+  p { max-width: 60ch; }
+
+  a { color: var(--cyan); }
+
+  *:focus-visible {
+    outline: 2px solid var(--cyan);
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
+
+  img, canvas { max-width: 100%; display: block; }
+
+  .wrap {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 0 32px;
+  }
+
+  /* ---------- ambient glow orbs ---------- */
+  .orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(70px);
+    pointer-events: none;
+    opacity: 0.5;
+    z-index: 0;
+  }
+
+  /* ---------- nav ---------- */
+  header {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    background: rgba(255,255,255,.86);
+    border-bottom: 1px solid transparent;
+    transition: background 0.3s ease, border-color 0.3s ease;
+  }
+  header.scrolled {
+    background: rgba(255,255,255,.94);
+    backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--border);
+  }
+  nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 32px;
+    max-width: 1180px;
+    margin: 0 auto;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 700;
+    font-size: 17px;
+    letter-spacing: -0.01em;
+  }
+  .brand-mark {
+    width: 26px; height: 26px;
+    border-radius: 7px;
+    background: linear-gradient(135deg, var(--cyan), var(--violet));
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .brand-mark svg { width: 15px; height: 15px; }
+  .nav-links {
+    display: flex;
+    gap: 30px;
+    list-style: none;
+    margin: 0; padding: 0;
+  }
+  .nav-links a {
+    color: var(--ink-muted);
+    text-decoration: none;
+    font-size: 13.5px;
+    font-weight: 500;
+    transition: color 0.15s;
+  }
+  .nav-links a:hover { color: var(--ink); }
+  .nav-cta {
+    background: var(--spectrum);
+    color: #fff;
+    border: none;
+    padding: 9px 18px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+  }
+  @media (max-width: 760px) { .nav-links { display: none; } }
+  @media (max-width: 420px) {
+    nav { padding: 14px 16px; }
+    .nav-cta { padding: 8px 13px; font-size: 12px; }
+    .brand-word { font-size: 15px; }
+  }
+
+  /* ---------- buttons ---------- */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 13px 24px;
+    border-radius: 10px;
+    font-size: 14.5px;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+  }
+  .btn:hover { transform: translateY(-2px); }
+  .btn-primary {
+    background: var(--spectrum);
+    color: #fff;
+  }
+  .btn-primary:hover { box-shadow: 0 8px 28px -8px rgba(124, 58, 237, 0.6); }
+  .btn-ghost {
+    background: rgba(244,238,252,0.03);
+    color: var(--ink);
+    border-color: var(--border);
+  }
+  .btn-ghost:hover { border-color: var(--cyan); }
+
+  /* ---------- hero ---------- */
+  .hero {
+    position: relative;
+    padding: 168px 32px 90px;
+    text-align: center;
+    overflow: hidden;
+  }
+  /* Everything in the hero except the 3D layer sits above it. */
+  .hero > *:not(.hero-3d) {
+    position: relative;
+    z-index: 1;
+  }
+  .hero-3d {
+    position: absolute;
+    top: 66%; left: 50%;
+    width: min(1100px, 150vw);
+    height: min(1100px, 150vw);
+    transform: translate(-50%, -50%);
+    z-index: 0;
+    pointer-events: none;
+    -webkit-mask-image: radial-gradient(circle, #000 42%, transparent 72%);
+    mask-image: radial-gradient(circle, #000 42%, transparent 72%);
+    opacity: 0;
+    transition: opacity 1.4s ease;
+  }
+  .hero-3d.ready { opacity: 1; }
+  .hero-3d canvas { display: block; width: 100% !important; height: 100% !important; }
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 7px 16px 7px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: var(--ink-muted);
+    margin-bottom: 28px;
+  }
+  .eyebrow .dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--lime);
+    box-shadow: 0 0 8px var(--lime);
+    animation: pulseDot 1.8s ease-in-out infinite;
+  }
+  @keyframes pulseDot {
+    0%, 100% { box-shadow: 0 0 6px var(--lime); }
+    50% { box-shadow: 0 0 14px 3px var(--lime); }
+  }
+  .hero h1 {
+    font-size: clamp(40px, 6.4vw, 74px);
+    line-height: 1.02;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin: 0 0 22px;
+    text-wrap: balance;
+  }
+  .hero h1 .accent {
+    background: var(--spectrum);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .hero-sub {
+    color: var(--ink-muted);
+    font-size: 18px;
+    max-width: 620px;
+    margin: 0 auto 38px;
+  }
+  .hero-actions {
+    display: flex;
+    gap: 14px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 72px;
+  }
+
+  /* ---------- waveform visual ---------- */
+  .waveform-stage {
+    position: relative;
+    max-width: 880px;
+    margin: 0 auto;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: linear-gradient(180deg, var(--surface), var(--surface-2));
+    padding: 30px 26px 24px;
+    text-align: left;
+  }
+  .waveform-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+  .waveform-head .label {
+    font-size: 12px;
+    color: var(--ink-dim);
+    letter-spacing: 0.04em;
+  }
+  .live-chip {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 11.5px; font-weight: 700; letter-spacing: 0.05em;
+    color: var(--lime);
+  }
+  .live-chip .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--lime); box-shadow: 0 0 6px var(--lime); }
+  canvas#waveform { width: 100%; height: 140px; border-radius: 10px; }
+  .score-callout {
+    position: absolute;
+    background: var(--surface-2);
+    border: 1px solid var(--cyan);
+    border-radius: 10px;
+    padding: 8px 12px;
+    font-size: 12px;
+    box-shadow: 0 8px 24px -8px rgba(34, 211, 238, 0.35);
+    opacity: 0;
+    transform: translateY(6px);
+    transition: opacity 0.4s ease, transform 0.4s ease;
+  }
+  .score-callout.show { opacity: 1; transform: translateY(0); }
+  .score-callout b { color: var(--cyan); font-family: "IBM Plex Mono", monospace; }
+  .waveform-foot {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 14px;
+    font-size: 12px;
+    color: var(--ink-dim);
+  }
+
+  /* ---------- badge row ---------- */
+  .badge-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+    max-width: 880px;
+    margin: 44px auto 0;
+  }
+  .badge {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    justify-content: center;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--ink-muted);
+    letter-spacing: 0.01em;
+  }
+  .badge svg { width: 16px; height: 16px; color: var(--cyan); flex-shrink: 0; }
+  @media (max-width: 680px) { .badge-row { grid-template-columns: 1fr; } }
+
+  /* ---------- section shell ---------- */
+  section { position: relative; }
+  .section-pad { padding: 110px 32px; }
+  .section-head { text-align: center; max-width: 640px; margin: 0 auto 60px; }
+  .kicker {
+    font-size: 12px; font-weight: 700; letter-spacing: 0.12em;
+    color: var(--cyan); text-transform: uppercase; margin-bottom: 14px;
+  }
+  .section-head h2 {
+    font-size: clamp(28px, 3.6vw, 40px);
+    font-weight: 700; letter-spacing: -0.01em; margin: 0 0 14px;
+  }
+  .section-head p { color: var(--ink-muted); margin: 0 auto; font-size: 16px; }
+
+  .reveal {
+    opacity: 0;
+    transform: translateY(28px);
+    transition: opacity 0.7s cubic-bezier(.16,1,.3,1), transform 0.7s cubic-bezier(.16,1,.3,1);
+  }
+  .reveal.in { opacity: 1; transform: translateY(0); }
+
+  /* ---------- pipeline ---------- */
+  .pipeline-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 18px;
+  }
+  @media (max-width: 900px) { .pipeline-grid { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 560px) { .pipeline-grid { grid-template-columns: 1fr; } }
+  .step-card {
+    position: relative;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 26px 20px 22px;
+    transition: border-color 0.2s, transform 0.2s;
+  }
+  .step-card:hover { border-color: var(--cyan); transform: translateY(-3px); }
+  .step-num {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 12px;
+    color: var(--ink-dim);
+    margin-bottom: 14px;
+  }
+  .step-icon {
+    width: 38px; height: 38px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 16px;
+  }
+  .step-icon svg { width: 19px; height: 19px; }
+  .step-card:nth-child(1) .step-icon { background: rgba(163,230,53,0.12); color: var(--lime); }
+  .step-card:nth-child(2) .step-icon { background: rgba(34,211,238,0.12); color: var(--cyan); }
+  .step-card:nth-child(3) .step-icon { background: rgba(124,58,237,0.16); color: #b794f6; }
+  .step-card:nth-child(4) .step-icon { background: rgba(255,79,154,0.14); color: var(--pink); }
+  .step-title { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+  .step-card p { font-size: 13.5px; color: var(--ink-muted); margin: 0; }
+  .step-connector {
+    position: absolute;
+    top: 40px; right: -18px;
+    color: var(--border);
+    font-size: 18px;
+    z-index: 2;
+  }
+  @media (max-width: 900px) { .step-connector { display: none; } }
+
+  /* ---------- product preview frame ---------- */
+  .frame-wrap {
+    max-width: 940px;
+    margin: 0 auto;
+  }
+  .browser-frame {
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+    overflow: hidden;
+    box-shadow: 0 40px 90px -30px rgba(0,0,0,0.6);
+  }
+  .frame-bar {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 11px 16px;
+    background: #0f0a1c;
+    border-bottom: 1px solid var(--border);
+  }
+  .frame-dots { display: flex; gap: 6px; }
+  .frame-dots span { width: 9px; height: 9px; border-radius: 50%; background: var(--border-soft); }
+  .frame-url {
+    flex: 1;
+    background: var(--surface);
+    border-radius: 6px;
+    padding: 5px 12px;
+    font-size: 11.5px;
+    color: var(--ink-dim);
+    font-family: "IBM Plex Mono", monospace;
+    text-align: center;
+  }
+  .mock-app {
+    display: flex;
+    min-height: 380px;
+    background: var(--bg);
+  }
+  .mock-sidebar {
+    width: 150px;
+    background: #0f0a1c;
+    border-right: 1px solid var(--border);
+    padding: 18px 12px;
+    flex-shrink: 0;
+  }
+  .mock-brand {
+    font-size: 12px; font-weight: 700;
+    background: var(--spectrum);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    margin-bottom: 18px;
+  }
+  .mock-nav-item {
+    font-size: 11px; color: var(--ink-dim);
+    padding: 7px 9px; border-radius: 6px; margin-bottom: 3px;
+  }
+  .mock-nav-item.active { background: rgba(124,58,237,0.18); color: var(--ink); border-left: 2px solid var(--cyan); }
+  .mock-main { flex: 1; padding: 22px 24px; }
+  .mock-title { font-size: 13px; font-weight: 700; margin-bottom: 14px; }
+  .mock-clip-card {
+    display: grid;
+    grid-template-columns: 130px 1fr;
+    gap: 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+  }
+  .mock-thumb {
+    background: linear-gradient(160deg, #1c1033, #0b0714);
+    border-radius: 7px;
+    aspect-ratio: 9/16;
+    position: relative;
+    overflow: hidden;
+  }
+  .mock-thumb::after {
+    content: "";
+    position: absolute; inset: 0;
+    background:
+      repeating-linear-gradient(180deg, rgba(34,211,238,0.12) 0 2px, transparent 2px 5px);
+  }
+  .mock-play {
+    position: absolute; inset: 0; margin: auto;
+    width: 26px; height: 26px; border-radius: 50%;
+    background: rgba(244,238,252,0.15);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .mock-play svg { width: 10px; height: 10px; color: #fff; }
+  .mock-clip-title { font-size: 12.5px; font-weight: 700; margin-bottom: 6px; line-height: 1.35; }
+  .mock-score-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .mock-score-badge {
+    font-size: 10.5px; font-weight: 800; padding: 2px 7px; border-radius: 5px;
+    background: linear-gradient(90deg, var(--cyan), var(--violet)); color: #fff;
+    font-family: "IBM Plex Mono", monospace;
+  }
+  .mock-stars { color: #fbbf24; font-size: 11px; letter-spacing: 1px; }
+  .mock-desc { font-size: 10.5px; color: var(--ink-dim); line-height: 1.5; }
+  .frame-caption {
+    text-align: center;
+    color: var(--ink-dim);
+    font-size: 13px;
+    margin-top: 22px;
+  }
+  .frame-caption a { color: var(--cyan); font-weight: 600; }
+
+  /* ---------- compatibility bar ---------- */
+  .compat-flow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 30px;
+    flex-wrap: wrap;
+  }
+  .compat-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+  }
+  .compat-label { font-size: 11px; letter-spacing: 0.08em; color: var(--ink-dim); text-transform: uppercase; }
+  .compat-pills { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+  .compat-pill {
+    border: 1px solid var(--border);
+    background: var(--surface);
+    padding: 9px 16px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink-muted);
+  }
+  .compat-arrow { color: var(--ink-dim); font-size: 20px; }
+  @media (max-width: 700px) { .compat-arrow { transform: rotate(90deg); } }
+
+  /* ---------- tiers ---------- */
+  .tier-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    align-items: start;
+  }
+  @media (max-width: 900px) { .tier-grid { grid-template-columns: 1fr; } }
+  .tier-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px 24px;
+    position: relative;
+  }
+  .tier-card.featured {
+    border-color: var(--cyan);
+    background: linear-gradient(180deg, rgba(34,211,238,0.06), var(--surface));
+    box-shadow: 0 0 0 1px var(--cyan), 0 20px 50px -20px rgba(34,211,238,0.3);
+  }
+  .tier-tag {
+    position: absolute; top: -12px; left: 24px;
+    background: var(--spectrum); color: #fff;
+    font-size: 10.5px; font-weight: 800; letter-spacing: 0.04em;
+    padding: 4px 11px; border-radius: 999px;
+  }
+  .tier-name { font-size: 17px; font-weight: 700; margin-bottom: 6px; }
+  .tier-desc { font-size: 13px; color: var(--ink-muted); margin-bottom: 20px; min-height: 36px; }
+  .tier-spec { font-family: "IBM Plex Mono", monospace; font-size: 22px; font-weight: 600; margin-bottom: 4px; }
+  .tier-spec-sub { font-size: 12px; color: var(--ink-dim); margin-bottom: 22px; }
+  .tier-list { list-style: none; margin: 0 0 24px; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+  .tier-list li { display: flex; gap: 9px; font-size: 13px; color: var(--ink-muted); }
+  .tier-list svg { width: 15px; height: 15px; color: var(--lime); flex-shrink: 0; margin-top: 1px; }
+
+  /* ---------- closing CTA ---------- */
+  .closing {
+    text-align: center;
+    padding: 120px 32px 130px;
+  }
+  .closing h2 { font-size: clamp(30px, 4vw, 44px); margin-bottom: 16px; }
+  .closing p { color: var(--ink-muted); margin: 0 auto 34px; font-size: 16px; }
+
+  /* ---------- footer ---------- */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 50px 32px 34px;
+  }
+  .footer-grid {
+    display: flex;
+    justify-content: space-between;
+    gap: 40px;
+    flex-wrap: wrap;
+    margin-bottom: 36px;
+  }
+  .footer-brand p { color: var(--ink-dim); font-size: 13px; max-width: 300px; margin: 10px 0 0; }
+  .footer-cols { display: flex; gap: 60px; flex-wrap: wrap; }
+  .footer-col h4 { font-size: 12px; letter-spacing: 0.05em; color: var(--ink-dim); text-transform: uppercase; margin: 0 0 14px; }
+  .footer-col a {
+    display: block; color: var(--ink-muted); text-decoration: none;
+    font-size: 13.5px; margin-bottom: 10px; transition: color 0.15s;
+  }
+  .footer-col a:hover { color: var(--ink); }
+  .footer-bottom {
+    display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px;
+    font-size: 12px; color: var(--ink-dim);
+    border-top: 1px solid var(--border-soft);
+    padding-top: 22px;
+  }
+</style>
+<link rel="stylesheet" href="/static/studio.css">
+<link rel="stylesheet" href="/static/portfolio.css">
+<link rel="stylesheet" href="/static/professional-light.css">
+</head>
+<body>
+
+<!-- ambient glow orbs -->
+<div class="orb" style="width:520px;height:520px;background:var(--violet);top:-140px;left:-160px;"></div>
+<div class="orb" style="width:420px;height:420px;background:var(--cyan);top:260px;right:-180px;opacity:0.28;"></div>
+<div class="orb" style="width:380px;height:380px;background:var(--pink);bottom:-100px;left:10%;opacity:0.22;"></div>
+
+<header id="siteHeader">
+  <nav>
+    <div class="brand">
+      <span class="brand-mark">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M3 12h3l2-7 4 14 3-9 2 5h4" stroke="#0b0714" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </span>
+      <span class="brand-word">kick-clipper</span>
+    </div>
+    <ul class="nav-links">
+      <li><a href="/how-it-works">How it works</a></li>
+      <li><a href="/pricing">Pricing</a></li>
+      <li><a href="/faq">FAQ</a></li>
+      {% if current_user.is_authenticated %}<li><a href="/dashboard">Dashboard</a></li>{% endif %}
+    </ul>
+    {% if current_user.is_authenticated %}
+      <a class="nav-cta" href="/dashboard">Open the dashboard</a>
+    {% else %}
+      <span style="display:flex; align-items:center; gap:18px;">
+        <a class="nav-ghost" href="/login" style="color:var(--ink-muted); text-decoration:none; font-size:13.5px; font-weight:600;">Log in</a>
+        <a class="nav-cta" href="/signup">Start free</a>
+      </span>
+    {% endif %}
+  </nav>
+</header>
+
+<main>
+  <section class="hero">
+    <div class="hero-3d" id="hero3d"></div>
+    <span class="eyebrow"><span class="dot"></span> KICK-FIRST · PAY ONLY FOR FOOTAGE PROCESSED · EMPTY JOBS REFUND</span>
+    <h1>Find the moments.<br><span class="accent">Make them worth watching.</span></h1>
+    <p class="hero-sub">kick-clipper analyses the audio from your Kick or YouTube stream, finds promising moments, then prepares clips with captions, crops and platform-specific titles for your review.</p>
+    <div class="hero-actions">
+      <a class="btn btn-primary" href="#pipeline">See the pipeline</a>
+      <a class="btn btn-ghost" href="/dashboard">Open the dashboard</a>
+    </div>
+
+    <div class="waveform-stage reveal in">
+      <div class="waveform-head">
+        <span class="label mono">audio_in — n3on_stream.ts</span>
+        <span class="live-chip"><span class="dot"></span> ANALYZING</span>
+      </div>
+      <div style="position:relative;">
+        <canvas id="waveform" width="880" height="140"></canvas>
+        <div class="score-callout mono" id="scoreCallout" style="top:14px; left:52%;">EDITORIAL SCORE <b>84</b> — example payoff</div>
+      </div>
+      <div class="waveform-foot mono">
+        <span>00:41:12</span>
+        <span>local transcript &rarr; context review &rarr; export</span>
+        <span>01:02:47</span>
+      </div>
+    </div>
+
+    <div class="badge-row">
+      <div class="badge reveal">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M12 3a3 3 0 00-3 3v6a3 3 0 006 0V6a3 3 0 00-3-3z" stroke="currentColor" stroke-width="1.8"/><path d="M6 11a6 6 0 0012 0M12 17v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        We run the pipeline for you
+      </div>
+      <div class="badge reveal">
+        <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"/><path d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4M4.9 19.1l2.8-2.8M16.3 7.7l2.8-2.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        AI reviews transcript windows
+      </div>
+      <div class="badge reveal">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/></svg>
+        Empty jobs refund automatically
+      </div>
+    </div>
+  </section>
+
+  <section class="section-pad" id="pipeline">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <div class="kicker">The pipeline</div>
+        <h2>From a long stream to clips ready for review</h2>
+        <p>Transcription and editing run locally. Configured AI providers analyse candidates, with optional video review.</p>
+      </div>
+      <div class="pipeline-grid">
+        <div class="step-card reveal">
+          <div class="step-connector">&rsaquo;</div>
+          <div class="step-num">01 / CAPTURE</div>
+          <div class="step-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M3 12h3l2-7 4 14 3-9 2 5h4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="step-title">Capture</div>
+          <p>streamlink pulls the live feed into rolling 30-second chunks — or vod.py grabs a finished VOD in one stable pass.</p>
+        </div>
+        <div class="step-card reveal">
+          <div class="step-connector">&rsaquo;</div>
+          <div class="step-num">02 / TRANSCRIBE</div>
+          <div class="step-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3a3 3 0 00-3 3v6a3 3 0 006 0V6a3 3 0 00-3-3z" stroke="currentColor" stroke-width="1.8"/><path d="M6 11a6 6 0 0012 0M12 17v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></div>
+          <div class="step-title">Transcribe</div>
+          <p>faster-whisper turns every chunk into a word-level, timestamped transcript — free, local, no API calls.</p>
+        </div>
+        <div class="step-card reveal">
+          <div class="step-connector">&rsaquo;</div>
+          <div class="step-num">03 / DETECT</div>
+          <div class="step-icon"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"/><path d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4M4.9 19.1l2.8-2.8M16.3 7.7l2.8-2.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></div>
+          <div class="step-title">Detect</div>
+          <p>Transcript search finds candidates. A bounded context review checks the event, payoff and weaknesses before final ranking. Optional video review adds visible evidence.</p>
+        </div>
+        <div class="step-card reveal">
+          <div class="step-num">04 / CLIP</div>
+          <div class="step-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M6 18L18 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="6" cy="6" r="2.4" stroke="currentColor" stroke-width="1.6"/><circle cx="6" cy="18" r="2.4" stroke="currentColor" stroke-width="1.6"/></svg></div>
+          <div class="step-title">Clip</div>
+          <p>ffmpeg cuts the segment, tracks the streamer's face into a 9:16 crop, and burns in word-synced captions.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section-pad" id="dashboard" style="background:linear-gradient(180deg, transparent, rgba(124,58,237,0.04), transparent);">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <div class="kicker">The dashboard</div>
+        <h2>One screen. Every job, every clip.</h2>
+        <p>Start streamers, process VODs, and review the results in your local browser dashboard.</p>
+      </div>
+      <div class="frame-wrap reveal" id="frameReveal">
+        <a href="/dashboard" style="text-decoration:none; color:inherit;">
+        <div class="browser-frame">
+          <div class="frame-bar">
+            <div class="frame-dots"><span></span><span></span><span></span></div>
+            <div class="frame-url">app.kick-clipper/library</div>
+          </div>
+          <div class="mock-app">
+            <div class="mock-sidebar">
+              <div class="mock-brand">kick-clipper</div>
+              <div class="mock-nav-item">Live Streamers</div>
+              <div class="mock-nav-item">VODs</div>
+              <div class="mock-nav-item active">Library</div>
+            </div>
+            <div class="mock-main">
+              <div class="mock-title">All clips — N3on</div>
+              <div class="mock-clip-card">
+                <div class="mock-thumb"><div class="mock-play"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></div></div>
+                <div>
+                  <div class="mock-clip-title">"N3on Talks to Man Who Did 15 Years on a Life Sentence"</div>
+                  <div class="mock-score-row">
+                    <span class="mock-score-badge">69</span>
+                    <span class="mock-stars">★★★★☆</span>
+                  </div>
+                  <div class="mock-desc">REVEAL &middot; prison release story<br>Guest reveals details of life sentence reversal tied to government cooperation.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        </a>
+        <p class="frame-caption">Example workflow — <a href="/dashboard">open your own library →</a></p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section-pad" id="compat">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <div class="kicker">Compatibility</div>
+        <h2>Find your moment. Prepare it for each platform.</h2>
+      </div>
+      <div class="compat-flow reveal">
+        <div class="compat-group">
+          <span class="compat-label">Captures from</span>
+          <div class="compat-pills">
+            <span class="compat-pill">Kick</span>
+            <span class="compat-pill">YouTube</span>
+          </div>
+        </div>
+        <span class="compat-arrow">&rarr;</span>
+        <div class="compat-group">
+          <span class="compat-label">Writes titles for</span>
+          <div class="compat-pills">
+            <span class="compat-pill">TikTok</span>
+            <span class="compat-pill">YouTube Shorts</span>
+            <span class="compat-pill">X</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section-pad" id="run-it">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <div class="kicker">Why kick-clipper</div>
+        <h2>Not another generic auto-clipper</h2>
+        <p>Built specifically for Kick's IRL/talk-show format, not repurposed from a generic "viral moments" tool.</p>
+      </div>
+      <div class="tier-grid">
+        <div class="tier-card reveal">
+          <div class="tier-name">Kick-native</div>
+          <div class="tier-desc">Not a YouTube tool with Kick bolted on.</div>
+          <ul class="tier-list">
+            <li><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg> Paste a channel or VOD URL directly</li>
+            <li><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg> Scoring for IRL stories, surprising exchanges and satisfying payoffs</li>
+            <li><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg> Priority-name awareness for recurring guests</li>
+          </ul>
+        </div>
+        <div class="tier-card featured reveal">
+          <span class="tier-tag">VISIBLE CONTROL</span>
+          <div class="tier-name">Sliders, not just autopilot</div>
+          <div class="tier-desc">For clippers who care about output quality.</div>
+          <ul class="tier-list">
+            <li><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg> Threshold, aspect ratio, tracking, all yours to tune</li>
+            <li><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg> A real score breakdown + "why this clip" on every result</li>
+            <li><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg> Saved trim, crop, captions and overlay controls</li>
+          </ul>
+        </div>
+        <div class="tier-card reveal">
+          <div class="tier-name">A refund you can prove</div>
+          <div class="tier-desc">Not a policy — a ledger.</div>
+          <ul class="tier-list">
+            <li><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg> Audio pulled first, video only for clips you keep</li>
+            <li><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg> Every hold/capture/refund is a row in your own history</li>
+            <li><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg> Zero clips found, zero credits spent</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="closing reveal">
+    <div class="kicker" style="justify-content:center; display:flex;">Ready when you are</div>
+    <h2>Your next clip is already<br>somewhere in that VOD.</h2>
+    <p>Point it at a channel, set a threshold, and go read chat. It'll tell you what it found.</p>
+    <a class="btn btn-primary" href="/dashboard">Open the dashboard</a>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="brand">
+          <span class="brand-mark">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M3 12h3l2-7 4 14 3-9 2 5h4" stroke="#0b0714" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+          <span class="brand-word">kick-clipper</span>
+        </div>
+        <p>Kick-native clip automation for clippers and clipping teams. You paste a channel or VOD; it transcribes, scores, cuts, and captions.</p>
+      </div>
+      <div class="footer-cols">
+        <div class="footer-col">
+          <h4>Product</h4>
+          <a href="/how-it-works">How it works</a>
+          <a href="/pricing">Pricing</a>
+          <a href="#compat">Platforms</a>
+        </div>
+        <div class="footer-col">
+          <h4>Support</h4>
+          <a href="/faq">FAQ</a>
+          <a href="/dashboard">Open the dashboard</a>
+        </div>
+        <div class="footer-col">
+          <h4>Legal</h4>
+          <a href="/terms">Terms</a>
+          <a href="/privacy">Privacy</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>kick-clipper — a personal live-clipping pipeline.</span>
+      <span class="mono">v1</span>
+    </div>
+  </div>
+</footer>
+
+<script type="module">
+import * as THREE from "/static/vendor/three.module.min.js";
+(function () {
+  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  var header = document.getElementById('siteHeader');
+  window.addEventListener('scroll', function () {
+    header.classList.toggle('scrolled', window.scrollY > 20);
+  }, { passive: true });
+
+  var revealEls = document.querySelectorAll('.reveal');
+  if ('IntersectionObserver' in window) {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('in');
+          io.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.2 });
+    revealEls.forEach(function (el) { io.observe(el); });
+  } else {
+    revealEls.forEach(function (el) { el.classList.add('in'); });
+  }
+
+  setTimeout(function () {
+    var el = document.getElementById('scoreCallout');
+    if (el) el.classList.add('show');
+  }, 1400);
+
+  var canvas = document.getElementById('waveform');
+  if (canvas) {
+    var ctx = canvas.getContext('2d');
+    var dpr = window.devicePixelRatio || 1;
+    var cssW = canvas.clientWidth || 880;
+    var cssH = 140;
+    canvas.width = cssW * dpr;
+    canvas.height = cssH * dpr;
+    ctx.scale(dpr, dpr);
+
+    var bars = 96;
+    var barW = cssW / bars;
+    var seed = [];
+    for (var i = 0; i < bars; i++) {
+      var base = 0.18 + Math.random() * 0.22;
+      var peakBoost = (i > bars * 0.42 && i < bars * 0.62) ? 0.45 : 0;
+      seed.push(base + peakBoost);
+    }
+
+    var grad = ctx.createLinearGradient(0, 0, cssW, 0);
+    grad.addColorStop(0, '#a3e635');
+    grad.addColorStop(0.4, '#22d3ee');
+    grad.addColorStop(0.7, '#7c3aed');
+    grad.addColorStop(1, '#ff4f9a');
+
+    function draw(t) {
+      ctx.clearRect(0, 0, cssW, cssH);
+      ctx.fillStyle = grad;
+      for (var i = 0; i < bars; i++) {
+        var wobble = reduceMotion ? 0 : Math.sin(t / 480 + i * 0.4) * 0.12;
+        var h = Math.max(0.06, Math.min(1, seed[i] + wobble)) * cssH;
+        var x = i * barW;
+        var y = (cssH - h) / 2;
+        ctx.globalAlpha = 0.9;
+        roundRect(ctx, x + barW * 0.22, y, barW * 0.56, h, 2);
+        ctx.fill();
+      }
+    }
+
+    function roundRect(c, x, y, w, h, r) {
+      c.beginPath();
+      c.moveTo(x + r, y);
+      c.arcTo(x + w, y, x + w, y + h, r);
+      c.arcTo(x + w, y + h, x, y + h, r);
+      c.arcTo(x, y + h, x, y, r);
+      c.arcTo(x, y, x + w, y, r);
+      c.closePath();
+    }
+
+    if (reduceMotion) {
+      draw(0);
+    } else {
+      function loop(t) {
+        draw(t);
+        requestAnimationFrame(loop);
+      }
+      requestAnimationFrame(loop);
+    }
+  }
+
+  // ---------- 3D hero: a glowing, organic particle sphere ----------
+  // Self-contained and wrapped in try/catch so a WebGL/CDN failure can
+  // never take down the rest of this script (scroll reveal, waveform).
+  try {
+    var heroEl = document.getElementById('hero3d');
+    if (heroEl) {
+      var W = heroEl.clientWidth, H = heroEl.clientHeight;
+      var renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      renderer.setSize(W, H);
+      heroEl.appendChild(renderer.domElement);
+
+      var scene = new THREE.Scene();
+      var camera = new THREE.PerspectiveCamera(45, W / H, 0.1, 100);
+      camera.position.z = 10;
+
+      // Site's own spectrum (matches --lime/--cyan/--violet/--pink) --
+      // manual hex lerp so we don't need a color-management library.
+      var stops = [
+        [0.00, 163, 230, 53],   // lime
+        [0.40, 34, 211, 238],   // cyan
+        [0.70, 124, 58, 237],   // violet
+        [1.00, 255, 79, 154]    // pink
+      ];
+      function spectrumColor(t) {
+        t = Math.max(0, Math.min(1, t));
+        for (var i = 0; i < stops.length - 1; i++) {
+          var a = stops[i], b = stops[i + 1];
+          if (t >= a[0] && t <= b[0]) {
+            var f = (t - a[0]) / (b[0] - a[0]);
+            return [
+              (a[1] + (b[1] - a[1]) * f) / 255,
+              (a[2] + (b[2] - a[2]) * f) / 255,
+              (a[3] + (b[3] - a[3]) * f) / 255
+            ];
+          }
+        }
+        return [1, 1, 1];
+      }
+
+      // Domain-warped sine noise -- no external noise library needed,
+      // just enough irregularity to break a perfect sphere into an
+      // organic-looking blob.
+      function fakeNoise(x, y, z) {
+        return (
+          Math.sin(x * 2.1 + y * 1.3) +
+          Math.sin(y * 1.7 - z * 2.4) +
+          Math.sin(z * 2.6 + x * 1.9) +
+          Math.sin((x + y + z) * 1.1)
+        ) / 4;
+      }
+
+      var baseGeo = new THREE.IcosahedronGeometry(2.3, 5);
+      var posAttr = baseGeo.attributes.position;
+      var count = posAttr.count;
+      var colors = new Float32Array(count * 3);
+      var displaced = new Float32Array(count * 3);
+      var dir = new THREE.Vector3();
+
+      for (var i = 0; i < count; i++) {
+        dir.set(posAttr.getX(i), posAttr.getY(i), posAttr.getZ(i)).normalize();
+        var n = fakeNoise(dir.x * 1.6, dir.y * 1.6, dir.z * 1.6);
+        var radius = 2.0 * (1 + n * 0.24);
+        displaced[i * 3] = dir.x * radius;
+        displaced[i * 3 + 1] = dir.y * radius;
+        displaced[i * 3 + 2] = dir.z * radius;
+
+        var c = spectrumColor((n + 1) / 2 * 0.65 + (dir.y * 0.5 + 0.5) * 0.35);
+        colors[i * 3] = Math.min(1, c[0] * 1.25);
+        colors[i * 3 + 1] = Math.min(1, c[1] * 1.25);
+        colors[i * 3 + 2] = Math.min(1, c[2] * 1.25);
+      }
+
+      var geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.BufferAttribute(displaced, 3));
+      geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+      var material = new THREE.PointsMaterial({
+        size: 0.055,
+        vertexColors: true,
+        transparent: true,
+        opacity: 1,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        sizeAttenuation: true
+      });
+
+      // A dim, solid inner core (normal shading via vertex colors on a
+      // low-detail mesh) so the shape still reads when the camera/mouse
+      // parallax briefly thins out the point density on one side.
+      var coreGeo = new THREE.IcosahedronGeometry(1.55, 3);
+      var coreMat = new THREE.MeshBasicMaterial({
+        color: 0x2a1450, transparent: true, opacity: 0.55
+      });
+      var core = new THREE.Mesh(coreGeo, coreMat);
+
+      var group = new THREE.Group();
+      // Sculpted violet ring: real WebGL geometry with restrained lighting.
+      var ring = new THREE.Mesh(
+        new THREE.TorusGeometry(2.05, 0.58, 32, 96),
+        new THREE.MeshStandardMaterial({color:0x7535dc, metalness:0.72, roughness:0.22})
+      );
+      ring.rotation.x = 0.42;
+      ring.rotation.z = -0.3;
+      group.add(ring);
+      var light = new THREE.DirectionalLight(0xeee4ff, 3.5);
+      light.position.set(-3,5,5); scene.add(light);
+      var rim = new THREE.PointLight(0x8844ff, 65, 20);
+      rim.position.set(4,-1,3); scene.add(rim);
+      scene.add(new THREE.HemisphereLight(0xb995ff,0x100720,1.4));
+      group.rotation.x = 0.3;
+      scene.add(group);
+
+      var mouseX = 0, mouseY = 0, targetX = 0, targetY = 0;
+      window.addEventListener('mousemove', function (e) {
+        mouseX = (e.clientX / window.innerWidth - 0.5) * 2;
+        mouseY = (e.clientY / window.innerHeight - 0.5) * 2;
+      }, { passive: true });
+
+      function resize3d() {
+        var w = heroEl.clientWidth, h = heroEl.clientHeight;
+        if (!w || !h) return;
+        camera.aspect = w / h;
+        camera.updateProjectionMatrix();
+        renderer.setSize(w, h);
+      }
+      window.addEventListener('resize', resize3d, { passive: true });
+
+      function renderFrame(t) {
+        targetX += (mouseY * 0.25 - targetX) * 0.04;
+        targetY += (mouseX * 0.35 - targetY) * 0.04;
+        group.rotation.x = 0.3 + targetX;
+        group.rotation.y = t * 0.00012 + targetY;
+        var breathe = 1 + Math.sin(t * 0.0006) * 0.035;
+        group.scale.setScalar(breathe);
+        renderer.render(scene, camera);
+      }
+
+      renderFrame(0);
+      heroEl.classList.add('ready');
+
+      if (!reduceMotion) {
+        (function loop3d(t) {
+          if (!document.hidden) renderFrame(t);
+          requestAnimationFrame(loop3d);
+        })(0);
+      }
+    }
+  } catch (e) {
+    // WebGL unsupported/blocked -- the hero still works without it.
+  }
+})();
+</script>
+{% include "_portfolio.html" %}
+</body>
+</html>

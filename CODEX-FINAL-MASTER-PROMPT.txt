@@ -1,0 +1,203 @@
+KICKCLIPPER FINAL MASTER AUDIT / REFINEMENT PROMPT
+
+You are working on my final KickClipper codebase. Treat this as a production launch audit, not a prototype rewrite. Inspect the repository before changing anything. Preserve working behavior and existing moment-detection logic unless a measured defect requires a change. Never claim a speedup without measuring the stage that changed.
+
+PRODUCT GOAL
+KickClipper turns long Kick/Twitch/YouTube/IRL VODs into genuinely post-worthy short clips. My priority order is:
+1. Do not miss the best moments.
+2. Fastest reliable total time from Process VOD -> best clips ready.
+3. No crashes, stuck jobs, silent content loss, duplicate work, or restart-from-zero failures.
+4. Tight clip boundaries and strong payoff inside the exported file.
+5. Professional light-blue/white SaaS UI.
+
+CORE PRINCIPLE
+The miss usually happens BEFORE the final score. Scout loose -> score hard -> merge story -> protect peaks -> cap weak payoff -> rank the whole VOD. Do not make the scout stricter merely to save API calls. Optimize waste around the scout rather than destroying recall.
+
+CURRENT INGEST / ASR DIRECTION
+- Default: acquire the analysis audio once from HLS using the fastest stable audio-only/lowest-bandwidth rendition available.
+- Do not download full-resolution video for detection. Pull/render original video only for final kept clips.
+- Keep `ROLLING_REMOTE_ASR=false` by default unless a benchmark proves rolling independent HLS windows beat one audio acquisition on total completion time.
+- The old rolling mode may remain as an optional benchmark/time-to-first-result mode, but it must not be silently selected as the fastest total-time mode.
+- HLS acquisition may use up to 16 concurrent fragments, with measured fallback to 12/8 if retries/throttling make 16 slower.
+- Prefer persistent/reused HTTP connections, bounded queues, checkpoints, Retry-After, jittered retry and sane timeouts.
+- If source analysis audio is already compatible AAC, stream-copy/remux instead of re-encoding the full VOD unnecessarily.
+- Avoid giant WAV files.
+
+PARAKEET
+Primary ASR is NVIDIA Parakeet-TDT 0.6B V3 through the configured provider/Together path in this repository. Do not pretend it is local CUDA unless the code actually uses a local NeMo model.
+- Current VOD transport window: 240 seconds.
+- Overlap: 15 seconds.
+- Preserve word timestamps.
+- Up to 16 concurrent requests are supported by the application, but actual concurrency must be throughput-driven. If provider 429s/timeouts make 16 slower than 8/12, back off.
+- Measure successful audio-minutes transcribed per wall-clock minute, upload latency, p50/p95 latency, 429s, ConnectionErrors and retries.
+- Successful chunks are checkpointed. A single failure must never restart hours of completed ASR.
+- If a large chunk repeatedly fails, split only that failed region into smaller retry windows instead of redoing the whole VOD.
+
+CHUNKING / RAG / TRANSCRIPT UNDERSTANDING
+Do not confuse ASR transport chunks with semantic moment windows.
+- ASR transport: optimized for provider throughput/reliability.
+- Semantic windows: timestamped overlapping windows for event discovery.
+- Keep exact global source timestamps through every layer.
+- Use hierarchical temporal retrieval: timestamped child windows -> high-recall scout -> surrounding parent context -> strict deep scoring -> merge connected event -> re-score -> selective visual verification -> final VOD ranking.
+- Never send a six-hour transcript as one giant LLM prompt.
+- Do not let ASR chunk boundaries become clip boundaries.
+
+SCOUT RELIABILITY
+Malformed model output, empty speech, missing optional fields, or a JSON parse error must NOT automatically turn a whole window into a 100-score deep-analysis candidate.
+- Validate text/start/end before scoring.
+- Tolerantly extract the first valid JSON object from fenced/prose responses.
+- Coerce only safe numeric values; reject non-finite values.
+- Empty/bad spans should be skipped.
+- On a scout parse/provider failure, use a cheap local high-recall fallback based on concrete IRL/dialogue signals. Only plausible regions should continue to deep scoring.
+- Log the actual reason and candidate count.
+- Provider outage must remain visible; do not silently pretend the scout succeeded.
+
+MOMENT TYPES THAT MUST BE CAUGHT
+Arguments, confrontations, accusations, shocking statements, funny/awkward moments, rejection, admission, escalation, reveals, emotional shifts, contradictions, reactions, wholesome turns, life lessons, IRL physical events, near fights, hop-outs, crashes/falls, money/status moments, humiliation, lie -> catch, streamer-vs-streamer conflict, danger, security/authority incidents, playback cringe, speechless reactions, quiet reveals, meaningful silence and nonverbal payoff.
+Thin transcript does not mean nothing happened.
+
+IRL EVENT CLASSES
+IRL_ACTION | IRL_REACTION | QUOTE | CONFRONTATION | REVEAL | COMEDY | FLEX_FAIL | HEART | STATUS | CHAOS
+
+SCORING PHILOSOPHY
+Preserve the existing scoring-policy source of truth. Current intended weighting lineage:
+Hook 20%, Payoff 20%, Comment Potential 13%, Judgment 12%, Emotion 12%, Novelty 11%, Standalone 7%, Technical 5%.
+Do not lower the export threshold just to create more high-rated clips.
+Important thresholds/behavior to preserve unless tests prove a defect:
+- scout minimum around 32
+- export around 60
+- payoff <3 can cap around 49
+- very-high peak around 65
+- dedupe overlapping versions
+- context review only top candidates
+- visual verification only top candidates
+
+For IRL, separate Moment quality from Cut/tightness. Intended display blend is approximately 0.65 Moment + 0.35 Cut. A great event with a padded export is not an 8-star finished clip.
+
+PAYOFF / CUT RULES
+Every strong candidate should identify where possible:
+- payoff_at_seconds
+- payoff_type: line | reaction | physical | reveal | silence
+If the claimed payoff is outside the exported file, cap it rather than pretending it is complete.
+Strong hook should generally arrive within the first ~3-8 seconds for top-tier clips.
+Do not use a quote in a title unless the quote actually occurs inside the exported clip.
+Prefer the tighter duplicate of the same story.
+Do not allow duration itself to masquerade as quality.
+
+CUT SCORE REFERENCE
+cut = 100
+  - 2.0 * dead_lead_seconds
+  - 1.2 * dead_tail_seconds
+  - 15 if hook_at > start + 8
+  - 25 if payoff_at not in file
+  - 20 if waste_ratio > 0.35
+  - 10 if duration outside class band
+
+Typical IRL clips: ~18-55 seconds. 56-70 only when an extra beat materially improves the event. Talk clips may be longer when story context is genuinely necessary, but padded >110s talk clips should not receive top finished-clip ratings.
+
+VISUAL ANALYSIS
+Do not run expensive vision across an entire VOD. First use transcript/audio/scene-change/chat signals. Sample frames around promising timestamps only. Visual review is especially important for physical/nonverbal IRL moments that ASR cannot describe. Render original video only for final winners.
+
+COMPETITOR / ORACLE EVALUATION
+When competitor clip data is available, use it as a recall oracle, not unquestionable truth.
+- If competitor clips cluster around a timestamp and KickClipper has no candidate within roughly +/-15s, classify as SCOUT_MISS.
+- If KickClipper found the event but exported ~140s while the useful competitor event is ~28s, classify as CUT_MISS.
+- Multiple independent clips clustered around the same short event are strong evidence that the scout should have surfaced it.
+- Store audit evidence: transcript, timestamps, audio burst, sampled frames, chat if available, scout output, deep score, final cut.
+
+PERFORMANCE ARCHITECTURE
+Heavy VOD/live processing must never execute on an HTTP request thread. The repository currently launches media jobs in subprocesses; preserve that isolation.
+Use a production-grade threaded WSGI server for the dashboard/API. Do not multiply heavyweight media workers just because HTTP threads are increased.
+
+Dashboard polling must not create unnecessary DB/HTTP churn:
+- active VOD status about every 10 seconds unless switching to SSE/WebSocket
+- clips around 20-30 seconds
+- pause nonessential account-summary polling while a VOD is active
+- hidden tabs back off further
+If you implement SSE, keep a low-frequency recovery poll so a dropped stream does not freeze the UI.
+
+RENDERING
+Detection must not encode final captions/layout repeatedly. Captions, 9:16 layout, tracking and final-quality encode happen only after a candidate is accepted. Keep optional toggles, but do not let final-render work block discovery of later candidates.
+
+ONE ETA ONLY
+The dashboard must show ONE ETA: estimated time until the entire job is finished.
+Never show fragment ETA, audio-pull ETA, transcription ETA or scan ETA as the main completion ETA.
+The total ETA must be based on monotonic job-wide progress and measured historical/current stage throughput. Show `estimating...` until there is enough data rather than inventing precision. Stage percentages may exist internally, but the user-facing ETA is total-job only.
+
+RESUME / CHECKPOINTING
+Persist atomically:
+- downloaded/ingested analysis audio identity
+- completed ASR chunks
+- transcript/timestamps
+- scout results
+- deep scores
+- merged candidates
+- visual review
+- final renders
+Restarting the same failed job should reuse valid completed work. Cache identity must include all settings that materially change the output so stale results are never reused incorrectly.
+
+ERROR POLICY
+Differentiate permanent and transient errors. Handle 408/429/5xx/network reset/DNS/timeout appropriately. Honor Retry-After. Use bounded jittered backoff. Recreate suspicious HTTP sessions after connection failures. Never infinitely retry permanent 4xx errors. Optional enrichments fail open; missing core transcript ranges must be explicit and must not silently produce a falsely complete job.
+
+OBSERVABILITY
+Record per job:
+- source/playlist resolution time
+- audio acquisition seconds and effective MB/s
+- fragment concurrency/retries if HLS downloader is used
+- time to first transcript
+- ASR chunk count/concurrency
+- ASR upload/request p50/p95
+- 429/network error counts
+- transcription wall time and real-time factor
+- time to first scout candidate
+- scout/deep/context/vision times
+- render time
+- total wall-clock time
+- cache hits
+Do not claim a performance improvement without comparing these metrics on the same VOD.
+
+UI / DESIGN
+The product must be premium, professional, predominantly white/off-white with ONE restrained light/medium blue accent. Remove inherited purple, violet, neon cyan and large dark navy/purple surfaces. Dark charcoal/navy is acceptable for text only, not giant background blocks.
+Use roughly 60/30/10 visual balance, max two fonts, 8px spacing rhythm, subtle borders/shadows, accessible focus states and responsive layouts.
+
+PORTFOLIO
+Preserve DailyDrama, KickScope and TacoCulture content/accounts. The portfolio presentation should be a professional light 3D carousel/orbit, not a gaming/neon globe:
+- slow automatic rotation
+- drag interaction
+- left/right controls
+- cards move around a true depth ring
+- subtle depth scaling/opacity
+- pause on hover
+- prefers-reduced-motion support
+- white cards, light-blue accents, restrained shadows
+- mobile fallback must remain clean and usable
+
+SECURITY / ACCOUNT RULES
+Never commit .env, provider keys, owner passwords, DB contents or customer media. Preserve account isolation, billing hooks and owner/customer output namespaces. Do not weaken path validation or source URL validation for convenience.
+
+FINAL AUDIT TASK
+1. Read AGENTS.md and all current audit/update docs first.
+2. Trace the actual code path from Process VOD -> source resolution -> audio ingest -> ASR -> transcript -> scout -> deep score -> merge/context -> visual review -> ranking -> render -> dashboard status.
+3. Identify dead settings, misleading UI controls and duplicate/contradictory config defaults.
+4. Search for serial loops, unnecessary transcodes, duplicate network reads, unbounded queues, stale sessions, N+1 LLM calls, repeated vision calls, database locks and excessive polling.
+5. Fix actual defects; do not perform speculative rewrites that remove working behavior.
+6. Preserve high recall and scoring quality.
+7. Compile every Python file.
+8. Run the complete test suite.
+9. Add tests for every new bug fix: malformed scout JSON, empty scout window, polling/ETA state where testable, ASR resume, failed chunk recovery, 429/backoff, timestamp continuity and cache identity.
+10. If an existing test is stale, explain why before updating it. Never weaken production behavior merely to make a test green.
+11. Produce FINAL-PRODUCTION-AUDIT.md listing exact files/functions changed, before/after architecture, benchmark evidence, test results, known limitations and anything still requiring production infrastructure to verify.
+12. Return the complete modified repository/ZIP. Do not stop at advice or snippets.
+
+SUCCESS CRITERIA
+- No fake progress.
+- One total-job ETA.
+- No unconditional deep-analysis escalation because scout JSON was malformed.
+- No full-resolution video download for transcription.
+- No repeated final rendering during detection.
+- No restart from zero after one failed ASR chunk.
+- No claims that 16 concurrency is faster unless metrics show it.
+- No purple/neon/dark-theme leftovers in the intended light UI.
+- Best moments remain the first priority.
+- Fastest RELIABLE total time is the second priority.
+- The final output should be launchable, measurable, resumable and understandable from its logs.

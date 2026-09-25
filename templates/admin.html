@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — kick-clipper</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/site.css">
+<style>
+  .admin-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .admin-table th { text-align: left; color: var(--ink-dim); font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; padding: 10px 12px; border-bottom: 1px solid var(--border); }
+  .admin-table td { padding: 10px 12px; border-bottom: 1px solid var(--border-soft); color: var(--ink-muted); }
+  .admin-table tr:hover td { background: rgba(255,255,255,0.02); }
+  .status-pill { font-family: "IBM Plex Mono", monospace; font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 6px; display: inline-block; }
+  .status-completed { background: rgba(163,230,53,0.15); color: var(--lime); }
+  .status-completed_empty { background: rgba(34,211,238,0.15); color: var(--cyan); }
+  .status-failed { background: rgba(255,79,154,0.15); color: var(--pink); }
+  .status-partial { background: rgba(251,191,36,0.15); color: #fbbf24; }
+  .status-running, .status-queued { background: rgba(168,155,199,0.15); color: var(--ink-muted); }
+
+  .settings-panel { max-width: 560px; }
+  .settings-row { display: flex; gap: 14px; margin-bottom: 14px; }
+  .settings-field { flex: 1; text-align: left; }
+  .settings-field label { display: block; font-size: 12.5px; color: var(--ink-muted); margin-bottom: 6px; }
+  .settings-field input, .settings-field select {
+    width: 100%; background: #0b0714; border: 1px solid var(--border); color: var(--ink);
+    padding: 10px 12px; border-radius: 8px; font-size: 14px; font-family: inherit;
+  }
+  .key-status { font-size: 12.5px; margin-bottom: 14px; }
+  .key-status.set { color: var(--lime); }
+  .key-status.unset { color: var(--pink); }
+  .settings-msg { font-size: 13px; margin-top: 12px; display: none; }
+  .settings-msg.ok { color: var(--lime); }
+  .settings-msg.err { color: var(--pink); }
+</style>
+<link rel="stylesheet" href="/static/professional-light.css">
+</head>
+<body>
+{% include "_nav.html" %}
+
+<main>
+  <section class="page-hero" style="padding-bottom:20px; text-align:left;">
+    <div class="wrap">
+      <span class="kicker">Owner only</span>
+      <h1 style="font-size:32px;">Job inspector</h1>
+      <p>Last 200 jobs across every account. This is the raw ledger, not a customer-facing view.</p>
+    </div>
+  </section>
+
+  <section class="section-pad" style="padding-top:0;">
+    <div class="wrap">
+      <div class="panel settings-panel">
+        <h2 style="font-size:15px; margin:0 0 4px;">Moment analysis AI</h2>
+        <p style="font-size:12.5px; color:var(--ink-muted); margin:0 0 16px;">
+          Separate from transcription. Parakeet turns audio into text; this AI reads the transcript to find, score and title the best moments. The key is never shown to customers or sent to their browser.
+        </p>
+        <div class="key-status {{ 'set' if llm_key_set else 'unset' }}">
+          {% if llm_key_set %}Currently set: <span class="mono">{{ llm_key_masked }}</span>{% else %}No Moment AI key set yet — Parakeet can transcribe, but clip detection cannot run.{% endif %}
+        </div>
+        <p style="font-size:12.5px;color:var(--ink-muted);">Both providers are configured independently. OpenAI is used for primary scoring; Grok/xAI is reserved for the judge/title role. Save each key separately.</p>
+        <div class="settings-row">
+          <div class="settings-field"><label for="openaiApiKey">OpenAI API key</label><input id="openaiApiKey" type="password" autocomplete="new-password" placeholder="sk-..."></div>
+          <button class="btn btn-primary" onclick="saveProviderKey('openai','openaiApiKey')">Save OpenAI key</button>
+        </div>
+        <div class="settings-row">
+          <div class="settings-field"><label for="xaiApiKey">Grok / xAI API key</label><input id="xaiApiKey" type="password" autocomplete="new-password" placeholder="xAI key"></div>
+          <button class="btn btn-primary" onclick="saveProviderKey('xai','xaiApiKey')">Save Grok/xAI key</button>
+        </div>
+        <div id="settingsMsg" class="settings-msg"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section-pad" style="padding-top:0;">
+    <div class="wrap" style="overflow-x:auto;">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>ID</th><th>User</th><th>Kind</th><th>Channel</th><th>Status</th>
+            <th>Stage</th><th>Clips</th><th>Est. min</th><th>Processed</th><th>Error</th><th>Created</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for job in jobs %}
+          <tr>
+            <td class="mono">{{ job.id }}</td>
+            <td>{{ job.user.email if job.user else '—' }}</td>
+            <td>{{ job.kind }}</td>
+            <td>{{ job.channel }}</td>
+            <td><span class="status-pill status-{{ job.status }}">{{ job.status }}</span></td>
+            <td class="mono">{{ job.stage }} ({{ job.stage_pct }}%)</td>
+            <td>{{ job.kept_clips }}</td>
+            <td>{{ "%.1f"|format(job.estimated_minutes) }}</td>
+            <td>{{ "%.1f"|format(job.minutes_processed) }}</td>
+            <td>{{ job.error_category or '—' }}</td>
+            <td class="mono">{{ job.created_at.strftime('%Y-%m-%d %H:%M') if job.created_at else '' }}</td>
+          </tr>
+          {% else %}
+          <tr><td colspan="11" style="text-align:center; padding:30px;">No jobs yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+{% include "_footer.html" %}
+<script src="/static/site.js"></script>
+<section class="card" style="max-width:900px;margin:24px auto;padding:24px">
+<h2>Pipeline quality & visual context</h2>
+<p>Before final ranking, a second editorial review checks the strongest candidates against surrounding dialogue. Optional frame review sends up to six images per reviewed candidate to your configured AI provider. It cannot see events between frames or discover silent moments. Leave the model blank for transcript-only processing.</p>
+<label>Video review method <select id="videoProvider"><option value="frames" {% if pipeline_settings.get('VIDEO_REVIEW_PROVIDER','frames') == 'frames' %}selected{% endif %}>Sampled frames · existing provider</option><option value="gemini" {% if pipeline_settings.get('VIDEO_REVIEW_PROVIDER') == 'gemini' %}selected{% endif %}>Gemini · candidate video and audio</option></select></label>
+<p>Gemini requires GEMINI_API_KEY in your server .env. It uploads only reviewed candidate videos, requests agentic inspection and attempts to delete each upload afterward. It does not scan the entire VOD for silent events.</p>
+<label>Candidate review limit <input id="reviewLimit" type="number" min="0" max="20" value="{{ pipeline_settings.get('CONTEXT_REVIEW_LIMIT','10') }}"></label>
+<p>At most one additional text request and one optional visual request per reviewed candidate. Set 0 to disable the second pass. Request limits are not a dollar budget.</p>
+<label>Vision model <input id="visionModel" value="{{ pipeline_settings.get('VISION_MODEL','') }}" placeholder="e.g. grok-4.6"></label>
+<label>Transcription batch size <input id="asrBatch" type="number" min="1" max="32" value="{{ pipeline_settings.get('WHISPER_BATCH_SIZE','1') }}"></label>
+<label>Beam size <input id="asrBeam" type="number" min="1" max="5" value="{{ pipeline_settings.get('WHISPER_BEAM_SIZE','1') }}"></label>
+<p>GPU: try batch 8 with Turbo. CPU: begin at batch 1. Larger batches use more memory. Beam 1 is the fast default; higher beams may improve difficult speech but take longer.</p>
+<button onclick="savePipeline(this)">Save pipeline settings</button><p id="pipelineStatus" role="status"></p>
+</section>
+<script>
+async function savePipeline(btn){btn.disabled=true;try{
+const r=await fetch('/api/admin/pipeline',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({video_provider:document.getElementById('videoProvider').value,review_limit:document.getElementById('reviewLimit').value,vision_model:document.getElementById('visionModel').value,batch_size:document.getElementById('asrBatch').value,beam_size:document.getElementById('asrBeam').value})});
+const d=await r.json();document.getElementById('pipelineStatus').textContent=d.ok?'Saved. Applies to new processing jobs.':d.error;
+}catch(e){document.getElementById('pipelineStatus').textContent=e.message;}finally{btn.disabled=false;}}
+</script>
+<script>
+async function saveProviderKey(provider, inputId) {
+  const msg = document.getElementById('settingsMsg');
+  const input = document.getElementById(inputId);
+  const apiKey = input.value.trim();
+  if (!apiKey) {
+    msg.textContent = 'Enter an API key first.';
+    msg.className = 'settings-msg err';
+    msg.style.display = 'block';
+    return;
+  }
+  const res = await fetch('/api/admin/platform_key', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      provider,
+      api_key: apiKey,
+    }),
+  });
+  const data = await res.json();
+  if (!data.ok) {
+    msg.textContent = data.error;
+    msg.className = 'settings-msg err';
+    msg.style.display = 'block';
+    return;
+  }
+  msg.textContent = 'Saved. New jobs will use this key immediately.';
+  msg.className = 'settings-msg ok';
+  msg.style.display = 'block';
+  input.value = '';
+  input.placeholder = data.masked;
+}
+</script>
+{% if transcription_controls|default(false) %}
+<section class="panel" style="max-width:1000px;margin:24px auto;padding:24px">
+  <h2>Transcription provider · audio → transcript</h2>
+  <p>Parakeet/MAI/Whisper only handle speech-to-text. They are separate from the Moment analysis AI above. Together Parakeet is the recommended fast VOD transcriber in this build; it will not silently use local Whisper when PARAKEET_LOCAL_FALLBACK=false.</p>
+  <label>Provider <select id="transcriptionProvider"><option value="whisper" {% if pipeline_settings.get('TRANSCRIPTION_PROVIDER','whisper') == 'whisper' %}selected{% endif %}>Local Whisper</option><option value="mai" {% if pipeline_settings.get('TRANSCRIPTION_PROVIDER') == 'mai' %}selected{% endif %}>Azure MAI-Transcribe-2</option><option value="parakeet" {% if pipeline_settings.get('TRANSCRIPTION_PROVIDER') == 'parakeet' %}selected{% endif %}>Together NVIDIA Parakeet</option></select></label>
+  <label>Azure Speech endpoint <input id="speechEndpoint" type="url" placeholder="https://your-resource.cognitiveservices.azure.com" value="{{ pipeline_settings.get('AZURE_SPEECH_ENDPOINT','') }}"></label>
+  <label>Azure Speech key <input id="speechKey" type="password" autocomplete="new-password" placeholder="Leave blank to keep saved key"></label>
+  <label>Together API key <input id="togetherKey" type="password" autocomplete="new-password" placeholder="Leave blank to keep saved key"></label>
+  <label>Concurrent uploads <input id="speechConcurrency" type="number" min="1" max="8" value="{{ pipeline_settings.get('MAI_CONCURRENCY','4') }}"></label>
+  <button onclick="saveTranscription(this)">Save transcription settings</button>
+  <p id="speechStatus" role="status"></p>
+</section>
+<script>
+async function saveTranscription(button) {
+  button.disabled=true;
+  try {
+    const response=await fetch('/api/admin/transcription',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({provider:document.getElementById('transcriptionProvider').value,endpoint:document.getElementById('speechEndpoint').value,key:document.getElementById('speechKey').value,together_key:document.getElementById('togetherKey').value,concurrency:document.getElementById('speechConcurrency').value})});
+    const result=await response.json(); if(!result.ok) throw Error(result.error || 'Save failed');
+    document.getElementById('speechKey').value=''; document.getElementById('togetherKey').value='';
+    document.getElementById('speechStatus').textContent='Saved for new jobs. Existing jobs continue with their original settings.';
+  } catch(e) { document.getElementById('speechStatus').textContent=e.message; }
+  finally {button.disabled=false;}
+}
+</script>
+{% endif %}
+</body>
+</html>

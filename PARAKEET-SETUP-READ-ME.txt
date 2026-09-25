@@ -1,0 +1,36 @@
+KICK CLIPPER - PARAKEET SETUP
+
+Parakeet and Moment AI are TWO separate stages:
+
+1) TRANSCRIPTION (audio -> text)
+   Provider: Together NVIDIA Parakeet
+   Required: TOGETHER_API_KEY
+
+2) MOMENT ANALYSIS (transcript -> best clips)
+   Provider: Grok/xAI OR OpenAI
+   Required: LLM_API_KEY saved in Admin > Moment analysis AI
+
+Recommended .env settings:
+
+TRANSCRIPTION_PROVIDER=parakeet
+TOGETHER_API_KEY=YOUR_TOGETHER_KEY
+PARAKEET_MODEL=nvidia/parakeet-tdt-0.6b-v3
+PARAKEET_LANGUAGE=en
+PARAKEET_CONCURRENCY=4
+PARAKEET_CHUNK_SECONDS=1800
+PARAKEET_CHUNK_OVERLAP_SECONDS=8
+PARAKEET_VERIFY_CREDENTIALS=true
+PARAKEET_LOCAL_FALLBACK=false
+PARAKEET_TIMEOUT_SECONDS=180
+PARAKEET_MAX_RETRIES=4
+ASR_MAX_CONCURRENCY=4
+
+Before a long VOD:
+  python verify_parakeet.py
+
+It must report PASS. During a VOD the terminal should show:
+  [transcribe] provider=parakeet
+  [parakeet] VERIFIED ...
+  [parakeet] OK ...
+
+If a Moment AI key is missing, the dashboard now says exactly that instead of implying Parakeet is missing.
