@@ -1,5 +1,5 @@
 faster-whisper==1.2.1
-streamlink==8.4.0
+streamlink==8.6.1
 opencv-python==4.10.0.84
 python-dotenv==1.2.3
 requests==2.34.2
