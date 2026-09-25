@@ -50,6 +50,14 @@ class Guardian:
             self.incidents.append(incident); return incident
         for pattern, category, action in RULES:
             if re.search(pattern, line, re.I):
+                if category == 'credentials':
+                    lower = line.lower()
+                    if 'api.openai.com' in lower or 'openai' in lower:
+                        action = 'OpenAI rejected the key or model permission. Re-save the OpenAI key and verify gpt-5.4-mini is enabled for the project.'
+                    elif 'api.x.ai' in lower or 'xai' in lower or 'grok' in lower:
+                        action = 'Grok/xAI rejected the key or model permission. Re-save the Grok key and verify grok-4.6 is enabled.'
+                    elif 'together' in lower or 'parakeet' in lower:
+                        action = 'Together rejected the key or Parakeet model. Re-save the Together key and verify nvidia/parakeet-tdt-0.6b-v3 is available.'
                 incident = dict(category=category, message=redact(line)[-1200:], action=action,
                                 time=time.time(), severity='warning' if category == 'warning' else 'error')
                 if self.incidents and self.incidents[-1]['message'] == incident['message']:
